@@ -1,6 +1,7 @@
 import os
 import tweepy as tw
 import pandas as pd
+import json
 
 desired_width=320
 
@@ -8,10 +9,13 @@ pd.set_option('display.width', desired_width)
 #np.set_printoption(linewidth=desired_width)
 pd.set_option('display.max_columns',10)
 
-consumer_key= 'ajpBwWo9H7flJ6Kt8YlSc8swk'
-consumer_secret= 'b0VXzBmVU2lSiyj3lsOlQCQHjYqOoRf3SNYhYsLiGEF0xkg5XY'
-access_token= '1408154749166362632-42mW4BTiuLjlaKHnujI3XSpKiSXaK8'
-access_token_secret= 'PlUQx58W0jRXPiHUISyzrJcYvhzE9dUUHuJU67Vs86sTx'
+
+with open('Profile.json') as json_file:
+    data = json.loads(json_file.read())
+consumer_key= data['APIKey']
+consumer_secret= data['APISecretKey']
+access_token= data['Access_Token']
+access_token_secret= data['Access_Token_Secret']
 
 auth = tw.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
