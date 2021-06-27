@@ -33,36 +33,39 @@ maxTweets = 100
 #csvWriter = csv.writer(csvFile)
 #csvWriter.writerow(['id','date','tweet',])
 
+scrape_dates = [['2009-04-01', '2009-05-01']]
 logger.info(' scraping started..')
-#for i,tweet in enumerate(sntwitter.TwitterSearchScraper('deprem + place:5e02a0f0d91c76d2 + since:2020-10-31 until:2020-11-03 -filter:links -filter:replies').get_items()):
-search = '"terremoto" "magnitudo" since:2016-08-24  until:2016-08-26 lang:it -filter:replies -filter:retweets'
-#terremoto +lang:it +
-scraped_tweets = sntwitter.TwitterSearchScraper(search).get_items()
+for dates in scrape_dates :
+    #search = '"terremoto" "magnitudo" since:2016-08-24  until:2016-08-26 lang:it -filter:replies -filter:retweets'
+    search = '"terremoto" since:{0}  until:{1} lang:it -filter:replies -filter:retweets'.format(dates[0], dates[1])
+    #terremoto +lang:it +
+    scraped_tweets = sntwitter.TwitterSearchScraper(search).get_items()
 
-# slicing the generator to keep only the first 100 tweets
-sliced_scraped_tweets = itertools.islice(scraped_tweets, 10)
+    # slicing the generator to keep only the first 100 tweets
+    sliced_scraped_tweets = itertools.islice(scraped_tweets, None)
 
-# convert to a DataFrame and keep only relevant columns
-#df = pd.DataFrame(sliced_scraped_tweets)[['date', 'content']]
-df = pd.DataFrame(sliced_scraped_tweets)
+    # convert to a DataFrame and keep only relevant columns
+    #df = pd.DataFrame(sliced_scraped_tweets)[['date', 'content']]
+    df = pd.DataFrame(sliced_scraped_tweets)
 
-df['date'] = df['date'].astype(str)
+    df['date'] = df['date'].astype(str)
 
-directory = os.path.abspath(os.getcwd())
-new_path = os.path.join(directory, "historical_data")
-
-try:
-    new_path = os.mkdir(new_path)
-    logger.info(' Folder created')
-except FileExistsError:
-    logger.info(' Folder Already Exists')
+    directory = os.path.abspath(os.getcwd())
     new_path = os.path.join(directory, "historical_data")
 
-new_path = os.path.join(directory, "historical_data")
+    try:
+        new_path = os.mkdir(new_path)
+        logger.info(' Folder created')
+    except FileExistsError:
+        logger.info(' Folder Already Exists')
+        new_path = os.path.join(directory, "historical_data")
+
+    new_path = os.path.join(directory, "historical_data")
 
 
-#print(df.dtypes)
-now = str(dt.datetime.now()).replace(' ', 'T').split('.')[0].replace(':', '')
-df.to_excel(new_path + "/historical_tweets_{0}.xlsx".format(now), sheet_name='Sheet_name_1')
+    #print(df.dtypes)
+    logger.info('saving to excel')
+    #now = str(dt.datetime.now()).replace(' ', 'T').split('.')[0].replace(':', '')
+    df.to_excel(new_path + "/historical_tweets_{0}_{1}.xlsx".format(dates[0], dates[1]), sheet_name='Sheet_name_1')
 
 logger.info('..process completed')
