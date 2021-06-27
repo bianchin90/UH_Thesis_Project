@@ -28,22 +28,25 @@ print('Posting a tweet from Python..')
 print( 'Tweet just posted!')
 
 # Define the search term and the date_since date as variables
-search_words = "earthquake -filter:retweets"
+search_words = "earthquake terremoto -filter:retweets"
 date_since = "2021-03-01"
+#date_since = "2016-08-01"
+#date_until = "2016-09-15"
 
 # Collect tweets
 tweets = tw.Cursor(api.search,
               q=search_words,
-              lang="en",
+              lang="it",
               since=date_since,
+              #until = date_until,
               tweet_mode='extended').items(5)
 
 results = [status._json for status in tweets]
 
-df = pd.DataFrame( columns = ["creation_time", "tweet_id", "full_text", "location"] )
+df = pd.DataFrame( columns = ["creation_time", "tweet_id", "full_text", "location", 'coordinates'] )
 for elem in results:
     #create array with created_at, id, full_text, location
-    row = [elem['created_at'], elem['id'], elem['full_text'], elem['user']['location']]
+    row = [elem['created_at'], elem['id'], elem['full_text'], elem['user']['location'], elem['coordinates']]
     df_length = len(df)
     df.loc[df_length] = row
     print(elem['full_text'])
