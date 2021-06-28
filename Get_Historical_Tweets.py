@@ -2,9 +2,18 @@
 from snscrape.modules import twitter as sntwitter
 import itertools
 import pandas as pd
-import datetime as dt
 import os
 import logging
+import datetime
+import calendar
+
+def add_months(sourcedate, months):
+    month = sourcedate.month - 1 + months
+    year = sourcedate.year + month // 12
+    month = month % 12 + 1
+    day = min(sourcedate.day, calendar.monthrange(year,month)[1])
+    return datetime.date(year, month, day)
+
 
 #set logger
 logging.basicConfig()
@@ -18,34 +27,29 @@ pd.set_option('display.width', desired_width)
 #np.set_printoption(linewidth=desired_width)
 pd.set_option('display.max_columns',10)
 
-maxTweets = 100
+#define start scraping date Earthquake at L'Aquila
+#start = add_months(datetime.datetime. strptime('2009-04-01', '%Y-%m-%d'), 0)
+start = add_months(datetime.datetime. strptime('2012-01-01', '%Y-%m-%d'), 0)
 
-#keyword = 'deprem'
-#place = '5e02a0f0d91c76d2' #This geo_place string corresponds to İstanbul, Turkey on twitter.
+#define temporal limit (next month)
+today = datetime.date.today()
+current_month =today.month
+current_year = today.year
 
-#keyword = 'covid'
-#place = '01fbe706f872cb32' This geo_place string corresponds to Washington DC on twitter.
-
-#Open/create a file to append data to
-#csvFile = open('place_result.csv', 'a', newline='', encoding='utf8')
-
-#Use csv writer
-#csvWriter = csv.writer(csvFile)
-#csvWriter.writerow(['id','date','tweet',])
-
-scrape_dates = [['2009-04-01', '2009-05-01']]
 logger.info(' scraping started..')
-for dates in scrape_dates :
+while start != datetime.date(current_year, current_month + 1, 1):
+    FROM  = start
+    TO = add_months(start, 1)
+    logger.info(' scraping from {0} to {1}'.format(FROM, TO))
     #search = '"terremoto" "magnitudo" since:2016-08-24  until:2016-08-26 lang:it -filter:replies -filter:retweets'
-    search = '"terremoto" since:{0}  until:{1} lang:it -filter:replies -filter:retweets'.format(dates[0], dates[1])
+    search = '"terremoto" since:{0}  until:{1} lang:it -filter:replies -filter:retweets'.format(FROM, TO)
     #terremoto +lang:it +
     scraped_tweets = sntwitter.TwitterSearchScraper(search).get_items()
 
-    # slicing the generator to keep only the first 100 tweets
+    # slicing the generator
     sliced_scraped_tweets = itertools.islice(scraped_tweets, None)
 
-    # convert to a DataFrame and keep only relevant columns
-    #df = pd.DataFrame(sliced_scraped_tweets)[['date', 'content']]
+    # convert to a DataFrame
     df = pd.DataFrame(sliced_scraped_tweets)
 
     df['date'] = df['date'].astype(str)
@@ -62,10 +66,12 @@ for dates in scrape_dates :
 
     new_path = os.path.join(directory, "historical_data")
 
-
-    #print(df.dtypes)
     logger.info('saving to excel')
+    df = df.applymap(lambda x: x.encode('unicode_escape').decode('utf-8') if isinstance(x, str) else x)
     #now = str(dt.datetime.now()).replace(' ', 'T').split('.')[0].replace(':', '')
-    df.to_excel(new_path + "/historical_tweets_{0}_{1}.xlsx".format(dates[0], dates[1]), sheet_name='Sheet_name_1')
+    df.to_excel(new_path + "/historical_tweets_{0}_{1}.xlsx".format(FROM, TO), sheet_name='Sheet_name_1')
+    start = TO
+
+
 
 logger.info('..process completed')
