@@ -33,7 +33,7 @@ date_since = "2021-03-01"
 #date_since = "2016-08-01"
 #date_until = "2016-09-15"
 
-# Collect tweets
+# Collect tweets 1234
 tweets = tw.Cursor(api.search,
               q=search_words,
               lang="it",

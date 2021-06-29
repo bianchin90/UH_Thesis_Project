@@ -46,7 +46,7 @@ while start != datetime.date(current_year, current_month + 1, 1):
     #terremoto +lang:it +
     scraped_tweets = sntwitter.TwitterSearchScraper(search).get_items()
 
-    # slicing the generator
+    # slicing the generator 1234
     sliced_scraped_tweets = itertools.islice(scraped_tweets, None)
 
     # convert to a DataFrame
