@@ -18,6 +18,8 @@ for elem in onlyfiles:
     counter += 1
     #if counter == 2:
     #    break
+    #if total > 1040000:
+    #    break
 print(total)
 
 directory = os.path.abspath(os.getcwd())
@@ -35,5 +37,6 @@ new_path = os.path.join(directory, "historical_data")
 
 final = final.applymap(lambda x: x.encode('unicode_escape').decode('utf-8') if isinstance(x, str) else x)
 final = final.drop(columns=['Unnamed: 0'])
+final = final.sample(1040000)
 final = final.reset_index(drop=True)
 final.to_excel(new_path + "/historical_tweets_Full.xlsx", sheet_name='Sheet_name_1')
