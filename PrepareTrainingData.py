@@ -58,17 +58,36 @@ def create_external_dataset() :
 
     total = 0
 
-    #final = pd.DataFrame()
+    final_External = pd.DataFrame()
     #counter = 0
     for elem in onlyfiles:
         if '_01' in elem:
-            continue
+            l = 0
         else:
             df = pd.read_excel(mypath + '/' + elem)
             logger.info(' Processing file {0}, file length: {1}'.format(elem, len(df)))
             total += len(df)
-    logger.info('Total number of records: {0}'.format(total))
+            final_External = final_External.append(df)
+    logger.info('Total number of records in final external topic dataframe: {0}'.format(total))
+    return final_External
 
 if __name__ == '__main__' :
     logger.info(' starting process..')
-    create_external_dataset()
+    #create df with non related topics
+    gossip = create_external_dataset()
+    print(gossip)
+
+    #read full earthquakes df
+    #quakes = pd.read_excel("historical_data/historical_tweets_Full.xlsx")
+
+    #select random sample
+    #quakes = quakes.sample(200000)
+
+    #keep only content columns
+    gossip = gossip['content']
+    #quakes = quakes[['content']]
+
+    #quakes = quakes.append(gossip)
+    #print(len(quakes))
+    print(gossip)
+
