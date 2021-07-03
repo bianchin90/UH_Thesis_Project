@@ -19,6 +19,7 @@ import sys
 nltk.download('stopwords')
 from nltk.corpus import stopwords
 import spacy
+import re
 
 #set logger
 logging.basicConfig()
@@ -94,6 +95,8 @@ def create_external_dataset() :
             l = 0
         else:
             df = pd.read_excel(mypath + '/' + elem)
+            if len(df) > 2000:
+                df = df.sample(2000) #new part for testing pipeline
             logger.info(' Processing file {0}, file length: {1}'.format(elem, len(df)))
             total += len(df)
             final_External = final_External.append(df)
@@ -101,7 +104,7 @@ def create_external_dataset() :
     return final_External
 
 if __name__ == '__main__' :
-    check = True
+    check = False
     if check :
         logger.info(' Merging historical data..')
         create_earthquake_dataset()
@@ -114,14 +117,14 @@ if __name__ == '__main__' :
 
         #read full earthquakes df
         logger.info(' creating earthquakes dataset..')
-        quakes = pd.read_excel("historical_data/historical_tweets_Full.xlsx")
+        quakes = pd.read_excel("historical_data/historical_tweets_ML.xlsx")
 
         #select random sample
-        quakes = quakes.sample(200000)
+        #quakes = quakes.sample(6000)
 
         #keep only content columns
-        gossip = gossip['content']
-        quakes = quakes['content']
+        #gossip = gossip['content']
+        #quakes = quakes['content']
 
         #append dataframes
         quakes = quakes.append(gossip)
@@ -130,11 +133,10 @@ if __name__ == '__main__' :
 
         logger.info(' Processing textual attributes..')
         # Remove punctuation/lower casing
-        papers['content_processed'] = \
-            papers['content'].map(lambda x: re.sub('[,\\.!?]', '', str(x)))
+#        papers['content_processed'] = papers['content'].map(lambda x: re.sub('[,\\.!?]', '', str(x)))
+        papers['content_processed'] = papers['content'].map(lambda x: re.sub('[,\\.!?]', '', str(x)))
         # Convert the titles to lowercase
-        papers['content_processed'] = \
-            papers['content_processed'].map(lambda x: x.lower())
+        papers['content_processed'] = papers['content_processed'].map(lambda x: x.lower())
         # Print out the first rows of papers
         papers['content_processed'].head()
 
@@ -181,7 +183,7 @@ if __name__ == '__main__' :
         # lda model training
         logger.info(' Training model..')
         # number of topics
-        num_topics = 7
+        num_topics = 16
         # Build LDA model
         lda_model = gensim.models.LdaMulticore(corpus=corpus,
                                                id2word=id2word,
