@@ -78,7 +78,7 @@ if __name__ == '__main__':
     papers = pd.read_excel('historical_data/historical_tweets_2012-05-01_2012-06-01.xlsx')
 
     #SAMPLE ONLY FOR TESTING##################################################
-    papers = papers.sample(100)
+    papers = papers.sample(50)
 
     # keep unnecessary columns
     papers = papers[['content']]
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     #Next, we convert the tokenized object into a corpus and dictionary
 
     stop_words = stopwords.words('italian')
-    stop_words.extend(['https','http', 'bqjkco', 'xe', 'xf', 'gi', 'pi', 'xec'])
+    stop_words.extend(['https','http', 'bqjkco', 'xe', 'xf', 'gi', 'pi', 'xec', 'tco'])
 
     data = papers.content_processed.values.tolist()
     data_words = list(sent_to_words(data))
@@ -250,5 +250,3 @@ if __name__ == '__main__':
                         pbar.update(1)
         pd.DataFrame(model_results).to_csv('lda_tuning_results.csv', index=False)
         pbar.close()
-        #test for commit 12345
-        #test for commitpush

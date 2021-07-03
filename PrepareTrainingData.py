@@ -95,8 +95,8 @@ def create_external_dataset() :
             l = 0
         else:
             df = pd.read_excel(mypath + '/' + elem)
-            if len(df) > 2000:
-                df = df.sample(2000) #new part for testing pipeline
+            #if len(df) > 2000:
+            #    df = df.sample(2000) #new part for testing pipeline
             logger.info(' Processing file {0}, file length: {1}'.format(elem, len(df)))
             total += len(df)
             final_External = final_External.append(df)
@@ -162,7 +162,7 @@ if __name__ == '__main__' :
         logger.info(' Preparing data for LDA Analysis..')
 
         stop_words = stopwords.words('italian')
-        stop_words.extend(['https', 'http', 'bqjkco', 'xe', 'xf', 'gi', 'pi', 'xec'])
+        stop_words.extend(['https', 'http', 'bqjkco', 'xe', 'xf', 'gi', 'pi', 'xec', 'tco'])
 
         data = papers.content_processed.values.tolist()
         data_words = list(sent_to_words(data))
@@ -183,7 +183,7 @@ if __name__ == '__main__' :
         # lda model training
         logger.info(' Training model..')
         # number of topics
-        num_topics = 16
+        num_topics = 8
         # Build LDA model
         lda_model = gensim.models.LdaMulticore(corpus=corpus,
                                                id2word=id2word,
