@@ -75,7 +75,7 @@ if __name__ == '__main__':
     logger.info(' Preparing data for LDA Analysis..')
 
     stop_words = stopwords.words('italian')
-    stop_words.extend(['https','http', 'bqjkco', 'xe', 'xf', 'gi', 'pi', 'xec'])
+    stop_words.extend(['https','http', 'bqjkco', '\xe8', 'xe', 'xf', 'gi', 'pi', 'xec'])
 
     data = papers.content_processed.values.tolist()
     data_words = list(sent_to_words(data))
