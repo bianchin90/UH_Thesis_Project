@@ -75,10 +75,10 @@ def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
 
 if __name__ == '__main__':
     # Read data into papers
-    papers = pd.read_excel('historical_data/historical_tweets_2012-05-01_2012-06-01.xlsx')
+    papers = pd.read_excel('historical_data/historical_tweets_ML.xlsx')
 
     #SAMPLE ONLY FOR TESTING##################################################
-    papers = papers.sample(50)
+    papers = papers.sample(4000)
 
     # keep unnecessary columns
     papers = papers[['content']]
@@ -201,7 +201,7 @@ if __name__ == '__main__':
     grid['Validation_Set'] = {}
     # Topics range
     min_topics = 2
-    max_topics = 11
+    max_topics = 10
     step_size = 1
     topics_range = range(min_topics, max_topics, step_size)
     # Alpha parameter
@@ -248,5 +248,5 @@ if __name__ == '__main__':
                         model_results['Coherence'].append(cv)
 
                         pbar.update(1)
-        pd.DataFrame(model_results).to_csv('lda_tuning_results.csv', index=False)
+        pd.DataFrame(model_results).to_csv('lda_tuning_results2.csv', index=False)
         pbar.close()
