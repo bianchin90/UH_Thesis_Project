@@ -5,6 +5,7 @@ import pandas as pd
 import os
 import re
 # Import the wordcloud library
+from gensim.models import CoherenceModel
 from wordcloud import WordCloud
 import gensim.corpora as corpora
 from pprint import pprint
@@ -16,6 +17,7 @@ from gensim.utils import simple_preprocess
 import nltk
 import logging
 nltk.download('stopwords')
+import spacy
 from nltk.corpus import stopwords
 
 #set logger
@@ -52,7 +54,7 @@ if __name__ == '__main__':
     # Read data into papers
     logger.info(' Reading DF..')
     papers = pd.read_excel('historical_data/historical_tweets_ML.xlsx')
-    pepers = papers.sample(10)
+    #pepers = papers.sample(10)
 
     # keep unnecessary columns
     papers = papers[['content']]
@@ -199,3 +201,7 @@ if __name__ == '__main__':
     with open(LDAvis_data_filepath, 'rb') as f:
         LDAvis_prepared = pickle.load(f)
     pyLDAvis.save_html(LDAvis_prepared, 'ldavis_prepared_final.html')
+
+    #save model
+    lda_model.save('final_model.model')
+    logger.info(' process completed')
