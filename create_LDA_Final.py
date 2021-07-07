@@ -54,6 +54,7 @@ if __name__ == '__main__':
     # Read data into papers
     logger.info(' Reading DF..')
     papers = pd.read_excel('historical_data/historical_tweets_ML.xlsx')
+    len_df = len(papers)
     #pepers = papers.sample(10)
 
     # keep unnecessary columns
@@ -142,15 +143,19 @@ if __name__ == '__main__':
 
     # Build LDA model
     logger.info(' Building model..')
+    topics = 9
+    alpha = 1/topics
+    beta = 1/topics
+    chunk = int((len_df/100)*70)
     lda_model = gensim.models.LdaMulticore(corpus=corpus,
                                            id2word=id2word,
-                                           num_topics=9,
+                                           num_topics=topics,
                                            random_state=100,
-                                           chunksize=100,
-                                           passes=10,  # remember to set it higher
+                                           chunksize=chunk,
+                                           passes=100,  # remember to set it higher
                                            per_word_topics=True,
-                                           alpha = 0.9,
-                                           eta = 0.9)
+                                           alpha=alpha,
+                                           eta=beta)
 
     logger.info(' Printing keyword topics..')
     # Print the Keyword in the 10 topics
