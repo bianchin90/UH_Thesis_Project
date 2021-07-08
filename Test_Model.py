@@ -66,14 +66,15 @@ if __name__ == '__main__':
 
     # Read data into papers
     logger.info(' Reading DF..')
-    raw = pd.read_excel('historical_data/historical_tweets_2012-05-01_2012-06-01.xlsx')
+    #raw = pd.read_excel('historical_data/historical_tweets_2012-05-01_2012-06-01.xlsx')
+    raw = pd.read_excel('historical_data/historical_tweets_2016-09-01_2016-10-01.xlsx')
     len_df = len(raw)
 
     #sort by date
     raw = raw.sort_values(by=['date'])
 
     #process in batches of 5 minutes
-    time_window = 5
+    time_window = 60 #12 hours: 720
     raw['date'] = pd.to_datetime(raw['date'])
     #print(papers[['date', 'content']])
     last = raw.date.max()
@@ -173,7 +174,7 @@ if __name__ == '__main__':
             #new_v = Sort(vector[0])
             new_v = sorted(vector[0], key=lambda x: x[1], reverse=True)
             if new_v[0][0] == 3:
-                #print(' Hearthquake detected')
+                print(' Hearthquake detected')
                 forecast.append('Heartquake')
             else:
                 forecast.append('Other')
@@ -188,7 +189,8 @@ if __name__ == '__main__':
         logger.info(' Eathquake tweets detected: {0}'.format(len(n_detection)))
 
         x.append(start)
-        y.append(len(n_detection))
+        #y.append(len(n_detection))
+        y.append(forecast.count('Heartquake'))
 
         #set next time window
         start = next
@@ -196,8 +198,8 @@ if __name__ == '__main__':
         counter += 1
         plt.plot(x, y)
         plt.pause(0.05)
-        #if counter == 150:
-        #    break
+        if counter == 150:
+            break
     print('done')
-#plt.plot(x, y)
+
 plt.show()
