@@ -1,3 +1,5 @@
+import datetime
+
 import pandas as pd
 import os
 import re
@@ -192,8 +194,10 @@ if __name__ == '__main__':
         start = next
         next = next + dt.timedelta(minutes=time_window)
         counter += 1
+        plt.plot(x, y)
+        plt.pause(0.05)
         #if counter == 150:
         #    break
     print('done')
-plt.plot(x, y)
+#plt.plot(x, y)
 plt.show()
