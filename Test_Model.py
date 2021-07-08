@@ -17,6 +17,7 @@ nltk.download('stopwords')
 import spacy
 from nltk.corpus import stopwords
 import datetime as dt
+import matplotlib.pyplot as plt
 
 
 pd.set_option('display.max_columns', None)
@@ -78,6 +79,11 @@ if __name__ == '__main__':
     next = start + dt.timedelta(minutes=time_window)
     print('{0}, {1}, {2}'.format(start, next, last))
 
+    #define array x and y to plot
+    x = [] #here you add the count od hearthquakes detected
+    y = [] #here you add the timeshift
+    #only for test
+    counter = 0
     while start < last :
         print('timeframe selected: from {0} to {1}'.format(start, next))
         df = raw[(raw['date'] >= start) & (raw['date'] < next) ]
@@ -126,7 +132,7 @@ if __name__ == '__main__':
         data_words = list(sent_to_words(data))
         # remove stop words
         data_words = remove_stopwords(data_words)
-        logger.info(data_words[:1][0][:30])
+        #logger.info(data_words[:1][0][:30])
 
         logger.info(' Building Bi- and Tri- grams..')
         # Build the bigram and trigram models
@@ -147,7 +153,7 @@ if __name__ == '__main__':
         nlp = spacy.load("it_core_news_sm", disable=['parser', 'ner'])
         # Do lemmatization keeping only noun, adj, vb, adv
         data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
-        logger.info(data_lemmatized[:1])
+        #logger.info(data_lemmatized[:1])
 
         # Create Dictionary
         id2word = corpora.Dictionary(data_lemmatized)
@@ -157,19 +163,37 @@ if __name__ == '__main__':
         corpus = [id2word.doc2bow(text) for text in texts]
 
         #feed
+        #declare list containing predictions
+        forecast = []
+        logger.info('printing LDA predictions.. ')
         for body in corpus :
             vector = lda[body]
-            logger.info('printing LDA predictions.. ')
-            new_v = Sort([vector[0]])
-            print(vector[0])
-            print(new_v)
-            break  #riprendi da qui, il sort non sorta.
+            #new_v = Sort(vector[0])
+            new_v = sorted(vector[0], key=lambda x: x[1], reverse=True)
+            if new_v[0][0] == 3:
+                #print(' Hearthquake detected')
+                forecast.append('Heartquake')
+            else:
+                forecast.append('Other')
+
+
+        #conta tutti i tweet catalogati come terremoto
+        #effettua  la doppia  sentiment analysis su questi
+        papers['forecast'] = forecast
+        n_detection = papers[papers['forecast'] == 'Heartquake']
+
+#        print(n_detection.groupby('forecast').count())
+        logger.info(' Eathquake tweets detected: {0}'.format(len(n_detection)))
+
+        x.append(start)
+        y.append(len(n_detection))
 
         #set next time window
         start = next
         next = next + dt.timedelta(minutes=time_window)
-        #conta tutti i tweet catalogati come terremoto
-        #effettua  la doppia  sentiment analysis su questi
-        break
+        counter += 1
+        #if counter == 150:
+        #    break
     print('done')
-
+plt.plot(x, y)
+plt.show()
