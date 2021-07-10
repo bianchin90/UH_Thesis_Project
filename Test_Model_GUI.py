@@ -22,7 +22,8 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import recycle
 from feel_it import EmotionClassifier, SentimentClassifier
-
+import tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 pd.set_option('display.max_columns', None)
 
 #set logger
@@ -71,6 +72,8 @@ if __name__ == '__main__':
 
     #declare dataframe for emotions perceived by population
     feelings = pd.DataFrame(columns=['feelings'])
+
+    root = tk.Tk()
 
     #only for test
     counter = 0
@@ -200,7 +203,7 @@ if __name__ == '__main__':
         #set next time window
         start = next
         next = next + dt.timedelta(minutes=time_window)
-        counter += 1
+
         # keep only last n records for line plot (fresherst data)
         N = 15
         # using list slicing
@@ -210,28 +213,51 @@ if __name__ == '__main__':
             y = y[-N:]
             plt.clf()
 
-        plot1 = plt.figure(1)
-        plt.title('Number of earthquake-tweets \n')
+        #you were following this tutorial https://datatofish.com/matplotlib-charts-tkinter-gui/
+        #figure1 = plt.Figure(figsize=(5, 4), dpi=100)
+        figure1 = plt.figure(1)
+        ax1 = figure1.add_subplot(111)
+        #if counter >= 1 :
+        #    plt.clf()
+        ax1.set_title('Number of earthquake-tweets \n')
         plt.plot(x, y)
-        plt.pause(0.05)
+        line1 = FigureCanvasTkAgg(figure1, root)
+        line1.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH)
+
+        try:
+            del line_df
+            line_df = pd.DataFrame(columns=['Count', 'Time'])
+        except:
+            line_df = pd.DataFrame(columns=['Count', 'Time'])
+
+        line_df['Time'] = y
+        line_df['Count'] = x
+        #line_df.plot(kind='line', legend=True, ax=ax1, color='r', marker='o', fontsize=10)
+
+
+        #plot1 = plt.figure(1)
+        #plt.title('Number of earthquake-tweets \n')
+        #plt.plot(x, y)
+        #plt.pause(0.05)
 
         #test with pie chart
-        #s = feelings.groupby("keys").ids.agg(lambda x: len(x.unique()))
-        tt = pd.value_counts(feelings['feelings'])
-        #my_labels = 'joy', 'sadness', 'fear', 'anger'
-        my_labels = feelings.feelings.unique()
-        my_explode = (0, 0.1, 0, 0.1)
-        plot2 = plt.figure(2)
-        plt.title('Tweet feelings\n')  # cerca come mostrare due plot allo stesso tempo https://www.kite.com/python/answers/how-to-show-two-figures-at-once-in-matplotlib-in-python
-        plt.clf()
-        plt.pie(tt, labels=my_labels, autopct='%20.1f%%', shadow = True)
+        #tt = pd.value_counts(feelings['feelings'])
+        #my_labels = feelings.feelings.unique()
+        #my_explode = (0, 0.1, 0, 0.1)
+        #plot2 = plt.figure(2)
+        #plt.title('Tweet feelings\n')  # cerca come mostrare due plot allo stesso tempo https://www.kite.com/python/answers/how-to-show-two-figures-at-once-in-matplotlib-in-python
+        #plt.clf()
+        #plt.pie(tt, labels=my_labels, autopct='%20.1f%%', shadow = True)
 
-        plt.axis('equal') #resume from here https://datatofish.com/pie-chart-matplotlib/
+        #plt.axis('equal') #resume from here https://datatofish.com/pie-chart-matplotlib/
         #end test
-
+        root.update_idletasks()
+        #root.update()
+        counter += 1
         if counter == 150:
             break
     print('done')
-
-plt.show()
+    #tk.update_idletasks()
+    #tk.update()
+#plt.show()
 
