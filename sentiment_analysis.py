@@ -13,7 +13,7 @@ print(' Reading input file..')
 df = pd.read_excel('historical_data/historical_tweets_2012-05-01_2012-06-01.xlsx')
 df = df.dropna()
 df = df['content']
-df = df.sample(15)
+df = df.sample(1500)
 
 print(' analyzing tweets..')
 #emo = []
@@ -39,11 +39,12 @@ print(' analyzing tweets..')
 print(' computing emotions analysis..')
 emo = emotion.predict(df.to_list())
 my_emo = set(emo)
-print(emo)
+print(my_emo)
+#print(emo)
 
-print(' computing sentiment analysis..')
-sent = sentiment.predict(df.to_list())
-my_sent = set(sent)
-print(sent)
+#print(' computing sentiment analysis..')
+#sent = sentiment.predict(df.to_list())
+#my_sent = set(sent)
+#print(sent)
 
 

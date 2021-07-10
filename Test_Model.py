@@ -20,7 +20,8 @@ import spacy
 from nltk.corpus import stopwords
 import datetime as dt
 import matplotlib.pyplot as plt
-
+import recycle
+from feel_it import EmotionClassifier, SentimentClassifier
 
 pd.set_option('display.max_columns', None)
 
@@ -30,29 +31,6 @@ logging.root.setLevel(logging.INFO)
 logger = logging.getLogger(' UH MSc [test-final-model]')
 logger.info(' modules imported correctly')
 
-def sent_to_words(sentences):
-    for sentence in sentences:
-        # deacc=True removes punctuations
-        yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))
-
-def remove_stopwords(texts):
-    return [[word for word in simple_preprocess(str(doc))
-             if word not in stop_words] for doc in texts]
-
-def make_bigrams(texts):
-    return [bigram_mod[doc] for doc in texts]
-
-def make_trigrams(texts):
-    return [trigram_mod[bigram_mod[doc]] for doc in texts]
-
-def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
-    """https://spacy.io/api/annotation"""
-    texts_out = []
-    for sent in texts:
-        doc = nlp(" ".join(sent))
-        texts_out.append([token.lemma_ for token in doc if token.pos_ in allowed_postags])
-    return texts_out
-
 def Sort(sub_li):
     sub_li.sort(key = lambda x: x[1])
     sub_li.reverse()
@@ -61,8 +39,13 @@ def Sort(sub_li):
 if __name__ == '__main__':
 
     #load model
-
     lda = gensim.models.LdaMulticore.load('final_model/final_model.model')
+
+    #read sentiment dataset
+    sentiment = pd.read_csv('SentimentData/Sentiment_words.csv', sep=';')
+
+    #define emotion classifier
+    emotion = EmotionClassifier()
 
     # Read data into papers
     logger.info(' Reading DF..')
@@ -85,6 +68,10 @@ if __name__ == '__main__':
     #define array x and y to plot
     x = [] #here you add the count od hearthquakes detected
     y = [] #here you add the timeshift
+
+    #declare dataframe for emotions perceived by population
+    feelings = pd.DataFrame(columns=['feelings'])
+
     #only for test
     counter = 0
     while start < last :
@@ -132,9 +119,9 @@ if __name__ == '__main__':
         stop_words.extend(['https', 'http', 'bqjkco', '\xe8', 'xe', 'xf', 'gi', 'pi', 'xec', 'tco'])
 
         data = papers.content_processed.values.tolist()
-        data_words = list(sent_to_words(data))
+        data_words = list(recycle.sent_to_words(data))
         # remove stop words
-        data_words = remove_stopwords(data_words)
+        data_words = recycle.remove_stopwords(data_words)
         #logger.info(data_words[:1][0][:30])
 
         logger.info(' Building Bi- and Tri- grams..')
@@ -149,13 +136,13 @@ if __name__ == '__main__':
 
         logger.info(' Removing stopwords..')
         # Remove Stop Words
-        data_words_nostops = remove_stopwords(data_words)
+        data_words_nostops = recycle.remove_stopwords(data_words)
         # Form Bigrams
-        data_words_bigrams = make_bigrams(data_words_nostops)
+        data_words_bigrams = recycle.make_bigrams(bigram_mod, data_words_nostops)
         # Initialize spacy 'en' model, keeping only tagger component (for efficiency)
         nlp = spacy.load("it_core_news_sm", disable=['parser', 'ner'])
         # Do lemmatization keeping only noun, adj, vb, adv
-        data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
+        data_lemmatized = recycle.lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
         #logger.info(data_lemmatized[:1])
 
         # Create Dictionary
@@ -180,13 +167,31 @@ if __name__ == '__main__':
                 forecast.append('Other')
 
 
-        #conta tutti i tweet catalogati come terremoto
-        #effettua  la doppia  sentiment analysis su questi
+        #select only tweets marked as earthquake
         papers['forecast'] = forecast
-        n_detection = papers[papers['forecast'] == 'Heartquake']
+        detected = papers[papers['forecast'] == 'Heartquake']
 
-#        print(n_detection.groupby('forecast').count())
-        logger.info(' Eathquake tweets detected: {0}'.format(len(n_detection)))
+        logger.info(' Eathquake tweets detected: {0}'.format(len(detected)))
+
+        if len(detected) > 0:
+            #run sentiment analysis
+            sentiment_eval = recycle.perform_sentiment_analysis(sentiment_dataset=sentiment, tweet_dataset=detected)
+            print(' Sentiment analysis results')
+            print(sentiment_eval['sentiment_value'].min())
+            print(sentiment_eval['sentiment_value'].max())
+
+            print(sentiment_eval['sentiment_unprocessed'].min())
+            print(sentiment_eval['sentiment_unprocessed'].max())
+
+            print(' computing emotions analysis..')
+            emotion_content = sentiment_eval['content']
+            emo = emotion.predict(emotion_content.to_list())
+            #my_emo = set(emo)
+            sentiment_eval['emotions'] = emo
+            print(emo)
+
+            extra = {'feelings': emo}
+            feelings = feelings.append(pd.DataFrame(extra))
 
         x.append(start)
         #y.append(len(n_detection))
@@ -198,7 +203,18 @@ if __name__ == '__main__':
         counter += 1
         plt.plot(x, y)
         plt.pause(0.05)
-        if counter == 150:
+
+        #test with pie chart
+        #s = feelings.groupby("keys").ids.agg(lambda x: len(x.unique()))
+        tt = pd.value_counts(feelings['feelings'])
+        #my_labels = 'joy', 'sadness', 'fear', 'anger'
+        my_labels = feelings.feelings.unique()
+        plt.pie(tt, labels=my_labels, autopct='%1.1f%%')
+        plt.title('Tweet feelings') #cerca come mostrare due plot allo stesso tempo https://www.kite.com/python/answers/how-to-show-two-figures-at-once-in-matplotlib-in-python
+        plt.axis('equal') #resume from here https://datatofish.com/pie-chart-matplotlib/
+        #end test
+
+        if counter == 1:
             break
     print('done')
 
