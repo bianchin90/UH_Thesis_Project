@@ -5,6 +5,7 @@ import os
 import re
 # Import the wordcloud library
 from gensim.models import CoherenceModel
+from matplotlib.animation import FuncAnimation
 from wordcloud import WordCloud
 import gensim.corpora as corpora
 from pprint import pprint
@@ -15,7 +16,6 @@ import gensim
 from gensim.utils import simple_preprocess
 import nltk
 import logging
-
 nltk.download('stopwords')
 import spacy
 from nltk.corpus import stopwords
@@ -23,63 +23,64 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import recycle
 from feel_it import EmotionClassifier, SentimentClassifier
-
+import tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 pd.set_option('display.max_columns', None)
 
-# set logger
+#set logger
 logging.basicConfig()
 logging.root.setLevel(logging.INFO)
 logger = logging.getLogger(' UH MSc [test-final-model]')
 logger.info(' modules imported correctly')
 
-
 def Sort(sub_li):
-    sub_li.sort(key=lambda x: x[1])
+    sub_li.sort(key = lambda x: x[1])
     sub_li.reverse()
     return (sub_li)
 
-
-# if __name__ == '__main__':
-def process_data():
-    # load model
+#if __name__ == '__main__':
+def process_data() :
+    #load model
     lda = gensim.models.LdaMulticore.load('final_model/final_model.model')
 
-    # read sentiment dataset
+    #read sentiment dataset
     sentiment = pd.read_csv('SentimentData/Sentiment_words.csv', sep=';')
 
-    # define emotion classifier
+    #define emotion classifier
     emotion = EmotionClassifier()
 
     # Read data into papers
     logger.info(' Reading DF..')
-    # raw = pd.read_excel('historical_data/historical_tweets_2012-05-01_2012-06-01.xlsx')
+    #raw = pd.read_excel('historical_data/historical_tweets_2012-05-01_2012-06-01.xlsx')
     raw = pd.read_excel('historical_data/historical_tweets_2016-09-01_2016-10-01.xlsx')
     len_df = len(raw)
 
-    # sort by date
+    #sort by date
     raw = raw.sort_values(by=['date'])
 
-    # process in batches of 5 minutes
-    time_window = 60  # 12 hours: 720
+    #process in batches of 5 minutes
+    time_window = 60 #12 hours: 720
     raw['date'] = pd.to_datetime(raw['date'])
-    # print(papers[['date', 'content']])
+    #print(papers[['date', 'content']])
     last = raw.date.max()
     start = raw.date.min()
     next = start + dt.timedelta(minutes=time_window)
     print('{0}, {1}, {2}'.format(start, next, last))
 
-    # define array x and y to plot
-    x = []  # here you add the count od hearthquakes detected
-    y = []  # here you add the timeshift
+    #define array x and y to plot
+    x = [] #here you add the count od hearthquakes detected
+    y = [] #here you add the timeshift
 
-    # declare dataframe for emotions perceived by population
+    #declare dataframe for emotions perceived by population
     feelings = pd.DataFrame(columns=['feelings'])
 
-    # only for test
+    root = tk.Tk()
+
+    #only for test
     counter = 0
-    while start < last:
+    while start < last :
         print('timeframe selected: from {0} to {1}'.format(start, next))
-        df = raw[(raw['date'] >= start) & (raw['date'] < next)]
+        df = raw[(raw['date'] >= start) & (raw['date'] < next) ]
         print(len(df))
 
         # keep unnecessary columns
@@ -108,9 +109,9 @@ def process_data():
         wordcloud = WordCloud(background_color="white", max_words=5000, contour_width=3, contour_color='steelblue',
                               width=800, height=400)
         # Generate a word cloud
-        # wordcloud.generate(long_string)
+        #wordcloud.generate(long_string)
         # Visualize the word cloud
-        # wordcloud.to_image()
+        #wordcloud.to_image()
 
         # Prepare data for LDA Analysis
         # start by tokenizing the text and removing stopwords.
@@ -125,7 +126,7 @@ def process_data():
         data_words = list(recycle.sent_to_words(data))
         # remove stop words
         data_words = recycle.remove_stopwords(data_words)
-        # logger.info(data_words[:1][0][:30])
+        #logger.info(data_words[:1][0][:30])
 
         logger.info(' Building Bi- and Tri- grams..')
         # Build the bigram and trigram models
@@ -146,7 +147,7 @@ def process_data():
         nlp = spacy.load("it_core_news_sm", disable=['parser', 'ner'])
         # Do lemmatization keeping only noun, adj, vb, adv
         data_lemmatized = recycle.lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
-        # logger.info(data_lemmatized[:1])
+        #logger.info(data_lemmatized[:1])
 
         # Create Dictionary
         id2word = corpora.Dictionary(data_lemmatized)
@@ -155,13 +156,13 @@ def process_data():
         # Term Document Frequency
         corpus = [id2word.doc2bow(text) for text in texts]
 
-        # feed
-        # declare list containing predictions
+        #feed
+        #declare list containing predictions
         forecast = []
         logger.info('printing LDA predictions.. ')
-        for body in corpus:
+        for body in corpus :
             vector = lda[body]
-            # new_v = Sort(vector[0])
+            #new_v = Sort(vector[0])
             new_v = sorted(vector[0], key=lambda x: x[1], reverse=True)
             if new_v[0][0] == 3:
                 print(' Hearthquake detected')
@@ -169,14 +170,15 @@ def process_data():
             else:
                 forecast.append('Other')
 
-        # select only tweets marked as earthquake
+
+        #select only tweets marked as earthquake
         papers['forecast'] = forecast
         detected = papers[papers['forecast'] == 'Heartquake']
 
         logger.info(' Eathquake tweets detected: {0}'.format(len(detected)))
 
         if len(detected) > 0:
-            # run sentiment analysis
+            #run sentiment analysis
             sentiment_eval = recycle.perform_sentiment_analysis(sentiment_dataset=sentiment, tweet_dataset=detected)
             print(' Sentiment analysis results')
             print(sentiment_eval['sentiment_value'].min())
@@ -188,7 +190,7 @@ def process_data():
             print(' computing emotions analysis..')
             emotion_content = sentiment_eval['content']
             emo = emotion.predict(emotion_content.to_list())
-            # my_emo = set(emo)
+            #my_emo = set(emo)
             sentiment_eval['emotions'] = emo
             print(emo)
 
@@ -196,10 +198,10 @@ def process_data():
             feelings = feelings.append(pd.DataFrame(extra))
 
         x.append(start)
-        # y.append(len(n_detection))
+        #y.append(len(n_detection))
         y.append(forecast.count('Heartquake'))
 
-        # set next time window
+        #set next time window
         start = next
         next = next + dt.timedelta(minutes=time_window)
 
@@ -212,38 +214,37 @@ def process_data():
             y = y[-N:]
             plt.clf()
 
-        #if counter == 0:
-        fig1 = plt.figure(1, figsize=(12, 6))  # declare figure
-        ax = plt.subplot(1,2,1)
-        ax1 = plt.subplot(1,2,2)
-        ax.title.set_text('Number of earthquake-tweets\n')
-        # plt.title('Number of earthquake-tweets \n') #working
-        ax.plot(x, y, color='red')
-        #plt.pause(0.05)
+        #you were following this tutorial https://datatofish.com/matplotlib-charts-tkinter-gui/
+        #figure1 = plt.Figure(figsize=(5, 4), dpi=100)
+        # guarda questo tutorial https://towardsdatascience.com/plotting-live-data-with-matplotlib-d871fac7500b
+#        figure1 = plt.figure(1)
+#        ax = plt.subplot(121)
+#        ax1 = plt.subplot(122)
+#        ax.set_facecolor('#DEDEDE')
+#        ax1.set_facecolor('#DEDEDE')
 
-        # pie chart (working)
-        tt = pd.value_counts(feelings['feelings'])
-        my_labels = feelings.feelings.unique()
-        my_explode = (0, 0.1, 0, 0.1)
-        # plot2 = plt.figure(2)
-        # plt.title('Tweet feelings\n')  # cerca come mostrare due plot allo stesso tempo https://www.kite.com/python/answers/how-to-show-two-figures-at-once-in-matplotlib-in-python
-        # plt.clf()
+        # clear axis
+        ax.cla()
         ax1.cla()
-        ax1.title.set_text('Tweet feelings\n')
-        ax1.pie(tt, labels=my_labels, autopct='%20.1f%%', shadow=True)
-        plt.pause(0.05)
-        #plt.axis('equal')  # resume from here https://datatofish.com/pie-chart-matplotlib/
-        # end test
+        ax.plot(x,y)
+        ax1.plot(y,x)
+
+
         counter += 1
-        if counter == 150:
+        if counter == 10:
             break
     print('done')
 
 
 if __name__ == '__main__':
+    figure1 = plt.figure(1, figsize=(8, 8))
+    ax = plt.subplot(121)
+    ax1 = plt.subplot(122)
+    ax.set_facecolor('#DEDEDE')
+    ax1.set_facecolor('#DEDEDE')
 
-    process_data()
-    #next steps: bring it inside tkinter
+    # animate
+    ani = FuncAnimation(figure1, process_data(), interval=1000)
 
+    plt.show()
 
-plt.show()
