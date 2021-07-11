@@ -15,6 +15,7 @@ import gensim
 from gensim.utils import simple_preprocess
 import nltk
 import logging
+
 nltk.download('stopwords')
 import spacy
 from nltk.corpus import stopwords
@@ -25,58 +26,60 @@ from feel_it import EmotionClassifier, SentimentClassifier
 
 pd.set_option('display.max_columns', None)
 
-#set logger
+# set logger
 logging.basicConfig()
 logging.root.setLevel(logging.INFO)
 logger = logging.getLogger(' UH MSc [test-final-model]')
 logger.info(' modules imported correctly')
 
+
 def Sort(sub_li):
-    sub_li.sort(key = lambda x: x[1])
+    sub_li.sort(key=lambda x: x[1])
     sub_li.reverse()
     return (sub_li)
 
-if __name__ == '__main__':
 
-    #load model
+#if __name__ == '__main__':
+def process_data() :
+    # load model
     lda = gensim.models.LdaMulticore.load('final_model/final_model.model')
 
-    #read sentiment dataset
+    # read sentiment dataset
     sentiment = pd.read_csv('SentimentData/Sentiment_words.csv', sep=';')
 
-    #define emotion classifier
+    # define emotion classifier
     emotion = EmotionClassifier()
 
     # Read data into papers
     logger.info(' Reading DF..')
-    #raw = pd.read_excel('historical_data/historical_tweets_2012-05-01_2012-06-01.xlsx')
+    # raw = pd.read_excel('historical_data/historical_tweets_2012-05-01_2012-06-01.xlsx')
     raw = pd.read_excel('historical_data/historical_tweets_2016-09-01_2016-10-01.xlsx')
     len_df = len(raw)
 
-    #sort by date
+    # sort by date
     raw = raw.sort_values(by=['date'])
 
-    #process in batches of 5 minutes
-    time_window = 60 #12 hours: 720
+    # process in batches of 5 minutes
+    time_window = 60  # 12 hours: 720
     raw['date'] = pd.to_datetime(raw['date'])
-    #print(papers[['date', 'content']])
+    # print(papers[['date', 'content']])
     last = raw.date.max()
     start = raw.date.min()
     next = start + dt.timedelta(minutes=time_window)
     print('{0}, {1}, {2}'.format(start, next, last))
 
-    #define array x and y to plot
-    x = [] #here you add the count od hearthquakes detected
-    y = [] #here you add the timeshift
+    # define array x and y to plot
+    x = []  # here you add the count od hearthquakes detected
+    y = []  # here you add the timeshift
 
-    #declare dataframe for emotions perceived by population
+    # declare dataframe for emotions perceived by population
     feelings = pd.DataFrame(columns=['feelings'])
 
-    #only for test
+    # only for test
     counter = 0
-    while start < last :
+    while start < last:
         print('timeframe selected: from {0} to {1}'.format(start, next))
-        df = raw[(raw['date'] >= start) & (raw['date'] < next) ]
+        df = raw[(raw['date'] >= start) & (raw['date'] < next)]
         print(len(df))
 
         # keep unnecessary columns
@@ -105,9 +108,9 @@ if __name__ == '__main__':
         wordcloud = WordCloud(background_color="white", max_words=5000, contour_width=3, contour_color='steelblue',
                               width=800, height=400)
         # Generate a word cloud
-        #wordcloud.generate(long_string)
+        # wordcloud.generate(long_string)
         # Visualize the word cloud
-        #wordcloud.to_image()
+        # wordcloud.to_image()
 
         # Prepare data for LDA Analysis
         # start by tokenizing the text and removing stopwords.
@@ -122,7 +125,7 @@ if __name__ == '__main__':
         data_words = list(recycle.sent_to_words(data))
         # remove stop words
         data_words = recycle.remove_stopwords(data_words)
-        #logger.info(data_words[:1][0][:30])
+        # logger.info(data_words[:1][0][:30])
 
         logger.info(' Building Bi- and Tri- grams..')
         # Build the bigram and trigram models
@@ -143,7 +146,7 @@ if __name__ == '__main__':
         nlp = spacy.load("it_core_news_sm", disable=['parser', 'ner'])
         # Do lemmatization keeping only noun, adj, vb, adv
         data_lemmatized = recycle.lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
-        #logger.info(data_lemmatized[:1])
+        # logger.info(data_lemmatized[:1])
 
         # Create Dictionary
         id2word = corpora.Dictionary(data_lemmatized)
@@ -152,13 +155,13 @@ if __name__ == '__main__':
         # Term Document Frequency
         corpus = [id2word.doc2bow(text) for text in texts]
 
-        #feed
-        #declare list containing predictions
+        # feed
+        # declare list containing predictions
         forecast = []
         logger.info('printing LDA predictions.. ')
-        for body in corpus :
+        for body in corpus:
             vector = lda[body]
-            #new_v = Sort(vector[0])
+            # new_v = Sort(vector[0])
             new_v = sorted(vector[0], key=lambda x: x[1], reverse=True)
             if new_v[0][0] == 3:
                 print(' Hearthquake detected')
@@ -166,15 +169,14 @@ if __name__ == '__main__':
             else:
                 forecast.append('Other')
 
-
-        #select only tweets marked as earthquake
+        # select only tweets marked as earthquake
         papers['forecast'] = forecast
         detected = papers[papers['forecast'] == 'Heartquake']
 
         logger.info(' Eathquake tweets detected: {0}'.format(len(detected)))
 
         if len(detected) > 0:
-            #run sentiment analysis
+            # run sentiment analysis
             sentiment_eval = recycle.perform_sentiment_analysis(sentiment_dataset=sentiment, tweet_dataset=detected)
             print(' Sentiment analysis results')
             print(sentiment_eval['sentiment_value'].min())
@@ -186,7 +188,7 @@ if __name__ == '__main__':
             print(' computing emotions analysis..')
             emotion_content = sentiment_eval['content']
             emo = emotion.predict(emotion_content.to_list())
-            #my_emo = set(emo)
+            # my_emo = set(emo)
             sentiment_eval['emotions'] = emo
             print(emo)
 
@@ -194,10 +196,10 @@ if __name__ == '__main__':
             feelings = feelings.append(pd.DataFrame(extra))
 
         x.append(start)
-        #y.append(len(n_detection))
+        # y.append(len(n_detection))
         y.append(forecast.count('Heartquake'))
 
-        #set next time window
+        # set next time window
         start = next
         next = next + dt.timedelta(minutes=time_window)
         counter += 1
@@ -210,15 +212,13 @@ if __name__ == '__main__':
             y = y[-N:]
             plt.clf()
 
-        plot1 = plt.figure(1)
-        plt.title('Number of earthquake-tweets \n')
+        fig1 = plt.figure(1, figsize=(12, 6))  # declare figure
+        plt.title('Number of earthquake-tweets \n') #working
         plt.plot(x, y)
         plt.pause(0.05)
 
-        #test with pie chart
-        #s = feelings.groupby("keys").ids.agg(lambda x: len(x.unique()))
+        # pie chart (working)
         tt = pd.value_counts(feelings['feelings'])
-        #my_labels = 'joy', 'sadness', 'fear', 'anger'
         my_labels = feelings.feelings.unique()
         my_explode = (0, 0.1, 0, 0.1)
         plot2 = plt.figure(2)
@@ -227,11 +227,13 @@ if __name__ == '__main__':
         plt.pie(tt, labels=my_labels, autopct='%20.1f%%', shadow = True)
 
         plt.axis('equal') #resume from here https://datatofish.com/pie-chart-matplotlib/
-        #end test
+        # end test
 
         if counter == 150:
             break
     print('done')
 
-plt.show()
+if __name__ == '__main__':
+    process_data()
 
+plt.show()
