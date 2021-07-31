@@ -1,61 +1,119 @@
+import json
+
 import nltk
 import pandas as pd
 import spacy
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-#import overpass
-from geopy import geocoders
+from geopy.geocoders import Nominatim
+from urllib.request import urlopen
+import plotly.express as px
+from geopandas import GeoDataFrame
+from shapely.geometry import Point
 
 nltk.download('punkt')
 
 nlp = spacy.load("it_core_news_sm", disable=['parser', 'ner'])
 pd.set_option('display.width', 300)
-pd.set_option('display.max_columns',20)
-
+pd.set_option('display.max_columns', 20)
 
 nlp = spacy.load("it_core_news_sm", disable=['parser', 'ner'])
 stop_words = stopwords.words('italian')
 stop_words.extend(['nuova', 'santa', 'santo', 'nuovo', 'va'])
-#api = overpass.API()
-gn = geocoders.GeoNames()
+
+# define geolocator for geocoding
+geolocator = Nominatim(user_agent="Earthquake_Detector")
 
 istat = pd.read_excel('Georeferencing/Elenco-comuni-italiani.xls')
 
-istat = istat[['Denominazione (Italiana e straniera)', "Denominazione dell'Unità territoriale sovracomunale (valida a fini statistici)", 'Denominazione Regione' ]]
-istat = istat.rename(columns= {'Denominazione (Italiana e straniera)' : 'city', "Denominazione dell'Unità territoriale sovracomunale (valida a fini statistici)": 'province',
-                               'Denominazione Regione' : 'region'})
-
+istat = istat[['Denominazione (Italiana e straniera)',
+               "Denominazione dell'Unità territoriale sovracomunale (valida a fini statistici)",
+               'Denominazione Regione']]
+istat = istat.rename(columns={'Denominazione (Italiana e straniera)': 'city',
+                              "Denominazione dell'Unità territoriale sovracomunale (valida a fini statistici)": 'province',
+                              'Denominazione Regione': 'region'})
 
 istat['city'] = istat['city'].apply(lambda x: x.lower())
 
+test_tweets = ['nuova inaugurazione gelateria a roma', 'avvistato alieno a pinzolo',
+               'il sindaco di opi promuove una nuova tassa sui rifiuti',
+               'teramo: puppiniello arrestato dai carabinieri',
+               'il piccoletto va in vacanza a trapani', 'tobia si è smarrito a roma']
 
-test_tweets = ['nuova inaugurazione gelateria a roma', 'avvistato orso a pinzolo', 'il sindaco di opi promuove una nuova tassa sui rifiuti', 'teramo: puppiniello arrestato dai carabinieri',
-               'il piccoletto va in vacanza a santa marinella']
+# create empty df to host matching records
+geo_df = pd.DataFrame(columns=['city', 'lat', 'lon', 'tweets'])
 
-
-#create empty df to host matching records
-geo_df = pd.DataFrame()
-
-#iterate tweets
+# iterate tweets
 for elem in test_tweets:
-
-    #process text (tokenization and stopwords)
+    # elem = sentence.lower()
+    # process text (tokenization and stopwords)
     text_tokens = word_tokenize(elem)
     print(text_tokens)
 
     tokens_without_sw = [word for word in text_tokens if not word in stop_words]
     print(tokens_without_sw)
 
-    #check if processed tweet contains any location information
-    for term in tokens_without_sw :
+    # check if processed tweet contains any location information
+    for term in tokens_without_sw:
         matches = istat['city'].str.contains(term).sum()
-        if matches > 0 :
+        if matches > 0:
             print(term)
-            #response = api.get('node["city"="{0}"]'.format(term))
-            response = gn.geocode('{0}, Italy'.format(term))
-            print(response)
-    break
+            address = '{0}'.format(term)
+
+            geolocator = Nominatim(user_agent="Earthquake_Detector")
+            location = geolocator.geocode(address)
+            if 'italia' in location.address.lower():
+                # print(location)
+                # print(location.address)
+                # print((location.latitude, location.longitude))
+
+                city = location.address.split(',')[0]
+                tweet_counter = 1
+
+                if (geo_df['city'] == city).any():
+                    # tweet_counter = geo_df.query('city=={0}'.format(city))['tweets'] +1
+                    mask = (geo_df['city'] == city)
+                    geo_df['tweets'][mask] += 1
+                else:
+                    geo_df.loc[len(geo_df)] = [city, location.latitude, location.longitude, tweet_counter]
+
+    # break
+print(geo_df)
+
+geometry = [Point(xy) for xy in zip(geo_df.lon, geo_df.lat)]
+geo_df = geo_df.drop(['lat', 'lon'], axis=1)
+gdf = GeoDataFrame(geo_df, crs="EPSG:4326", geometry=geometry)
+
+print(gdf)
+exit()
+
+with urlopen(
+        'https://raw.githubusercontent.com/openpolis/geojson-italy/master/geojson/limits_IT_municipalities.geojson') as response:
+    municipalities = json.load(response)
+
+# print(municipalities)
 
 
-    #riparti da qui https://github.com/geopy/geopy
-    #hai trovato la città, ora devi beccare le coordinate
+fig = px.choropleth(data_frame=geo_df, geojson=municipalities,
+                    locations=['lat', 'lon'],
+                    # color='tweets',
+                    # color_continuous_scale="Viridis",
+                    # range_color=(0, 12),
+                    scope="europe"
+                    #,
+                    # labels={'tweets': 'number of tweets'}
+                    )
+
+fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+fig.show()
+
+# riparti da qui
+# https://www.youtube.com/watch?v=hSPmj7mK6ng
+# https://github.com/Coding-with-Adam/Dash-by-Plotly/blob/master/Other/Dash_Introduction/intro.py
+# https://plotly.com/python/choropleth-maps/
+# https://plotly.com/python/map-configuration/
+# https://medium.com/using-specialist-business-databases/creating-a-choropleth-map-using-geopandas-and-financial-data-c76419258746
+
+# https://github.com/geopy/geopy
+# https://medium.com/analytics-vidhya/how-to-generate-lat-and-long-coordinates-of-city-without-using-apis-25ebabcaf1d5
+
