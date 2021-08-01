@@ -8,8 +8,8 @@ from nltk.tokenize import word_tokenize
 from geopy.geocoders import Nominatim
 from urllib.request import urlopen
 import plotly.express as px
-from geopandas import GeoDataFrame
-from shapely.geometry import Point
+# from geopandas import GeoDataFrame
+# from shapely.geometry import Point
 
 nltk.download('punkt')
 
@@ -78,34 +78,63 @@ for elem in test_tweets:
                     geo_df.loc[len(geo_df)] = [city, location.latitude, location.longitude, tweet_counter]
 
     # break
+geo_df['size'] = 2
 print(geo_df)
 
-geometry = [Point(xy) for xy in zip(geo_df.lon, geo_df.lat)]
-geo_df = geo_df.drop(['lat', 'lon'], axis=1)
-gdf = GeoDataFrame(geo_df, crs="EPSG:4326", geometry=geometry)
+#geometry = [Point(xy) for xy in zip(geo_df.lon, geo_df.lat)]
+#geo_df = geo_df.drop(['lat', 'lon'], axis=1)
+#gdf = GeoDataFrame(geo_df, crs="EPSG:4326", geometry=geometry)
 
-print(gdf)
-exit()
+#print(gdf)
+#exit()
 
-with urlopen(
-        'https://raw.githubusercontent.com/openpolis/geojson-italy/master/geojson/limits_IT_municipalities.geojson') as response:
-    municipalities = json.load(response)
+# with urlopen(
+#         'https://raw.githubusercontent.com/openpolis/geojson-italy/master/geojson/limits_IT_municipalities.geojson') as response:
+#     municipalities = json.load(response)
+#
 
-# print(municipalities)
+# fig = px.choropleth_mapbox(geo_df, geojson=municipalities['features'],
+#                            locations='city',
+#                            color='tweets',
+#                            color_continuous_scale="Viridis",
+#                            range_color=(0, 12),
+#                            mapbox_style="carto-positron",
+#                            zoom=5, center = {"lat": 42.44208797622657, "lon": 12.966702481337714},
+#                            opacity=0.5,
+#                            # labels={'tweet':'number of tweets'}
+#                           )
+
+with open('Profile.json') as profile:
+    config = json.load(profile)
 
 
-fig = px.choropleth(data_frame=geo_df, geojson=municipalities,
-                    locations=['lat', 'lon'],
-                    # color='tweets',
-                    # color_continuous_scale="Viridis",
-                    # range_color=(0, 12),
-                    scope="europe"
-                    #,
-                    # labels={'tweets': 'number of tweets'}
-                    )
+px.set_mapbox_access_token(config["Mapbox_Access_Token"])
+df = px.data.carshare()
+print(df)
+
+#https://plotly.github.io/plotly.py-docs/generated/plotly.express.scatter_mapbox.html
+fig = px.scatter_mapbox(title='Locations impacted by earthquake detector',
+                        data_frame=geo_df, lat="lat", lon="lon",
+                        color="tweets", size='size',
+                        color_continuous_scale=px.colors.cyclical.IceFire, size_max=15,
+                        center = {"lat": 42.44208797622657, "lon": 12.966702481337714},
+                        hover_name="city",
+                        zoom=5,
+                        mapbox_style='dark')
+#exit()
 
 fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+#fig.update_traces(marker_symbol='pentagon-dot', )
+
 fig.show()
+
+print('adding new row')
+geo_df.loc[len(geo_df)] = ['Bari', '41.11336132309502', '16.860921999063116', 1, 2]
+print(geo_df)
+fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+fig.update_mapboxes()
+print('done')
+
 
 # riparti da qui
 # https://www.youtube.com/watch?v=hSPmj7mK6ng
@@ -116,4 +145,9 @@ fig.show()
 
 # https://github.com/geopy/geopy
 # https://medium.com/analytics-vidhya/how-to-generate-lat-and-long-coordinates-of-city-without-using-apis-25ebabcaf1d5
+
+
+# integrate mapbox in dash
+# https://www.youtube.com/watch?v=7R7VMSLwooo
+# https://github.com/Coding-with-Adam/Dash-by-Plotly/blob/master/Dash_Interactive_Graphs/Scatter_mapbox/recycling.py
 
