@@ -151,3 +151,6 @@ print('done')
 # https://www.youtube.com/watch?v=7R7VMSLwooo
 # https://github.com/Coding-with-Adam/Dash-by-Plotly/blob/master/Dash_Interactive_Graphs/Scatter_mapbox/recycling.py
 
+#update dash
+# https://stackoverflow.com/questions/46075960/live-updating-only-the-data-in-dash-plotly
+# https://stackoverflow.com/questions/54807868/how-to-fix-importerror-cannot-import-name-event-in-dash-from-plotly-python
