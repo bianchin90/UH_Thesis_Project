@@ -154,3 +154,6 @@ print('done')
 #update dash
 # https://stackoverflow.com/questions/46075960/live-updating-only-the-data-in-dash-plotly
 # https://stackoverflow.com/questions/54807868/how-to-fix-importerror-cannot-import-name-event-in-dash-from-plotly-python
+# https://dash.plotly.com/live-updates
+
+#
