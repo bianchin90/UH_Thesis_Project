@@ -26,13 +26,16 @@ mapbox_access_token = config["Mapbox_Access_Token"]
 
 df = pd.read_excel("Georeferencing/sample_output.xlsx")
 
-app = dash.Dash(__name__)
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 blackbold = {'color': 'black', 'font-weight': 'bold'}
 
 
 app.layout = html.Div([
     # ---------------------------------------------------------------
+    ####################àhtml.H1("Quickker - Faster is Better"),
     # Map_legen + Borough_checklist + Recycling_type_checklist + Web_link + Map
     html.Div([
         html.Div([
@@ -162,5 +165,6 @@ def update_pie(n):
 #         else:
 #             return html.A(the_link, href=the_link, target="_blank")
 # #--------------------------------------------------------------
+
 if __name__ == '__main__':
     app.run_server(debug=False, dev_tools_hot_reload=True)
