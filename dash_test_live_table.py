@@ -161,18 +161,15 @@ def update_pie(n2):
     time = len(dff)
     dff.loc[len(dff)] = [time, rd.randint(1,101)]
     print(dff)
-    # traces = list()
-    # for t in range(2):
-    #     traces.append(plotly.graph_objs.Bar(
-    #         x=[1, 2, 3, 4, 5],
-    #         y=[(t + 1) * random() for i in range(5)],
-    #         name='Bar {}'.format(t)
-    #     ))
-    fig = px.line(dff, x=dff['X'], y=dff['Y'])
-    fig = fig.update_layout(yaxis={'title':'Count'}, xaxis={'title':'Timeline'},
-                      title={'text':'Number of tweets detected',
-                      'font':{'size':28},'x':0.5,'xanchor':'center'})
-    return fig
+
+    # fig = px.line(dff, x=dff['X'], y=dff['Y'])
+    # fig = fig.update_layout(yaxis={'title':'Count'}, xaxis={'title':'Timeline'},
+    #                   title={'text':'Number of tweets detected',
+    #                   'font':{'size':28},'x':0.5,'xanchor':'center'})
+    data = go.Line(x=list(dff['X']), y=list(dff['Y']), mode= 'lines+markers')
+    return {'data':data, 'layout' : go.Layout(xaxis=dict(range=[dff['X'].min(),dff['X'].max()], title='Timeline'),
+                                                yaxis=dict(range=[dff['Y'].min(),dff['Y'].max()], title='Count' ))
+            }
 
 
 # -----------------------------------------------------------------
