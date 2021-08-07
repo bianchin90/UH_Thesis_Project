@@ -20,6 +20,7 @@ import plotly.offline as py  # (version 4.4.1)
 import plotly.graph_objs as go
 import plotly.express as px
 import dash_table
+import dash_bootstrap_components as dbc
 
 with open('Profile.json') as profile:
     config = json.load(profile)
@@ -29,10 +30,10 @@ mapbox_access_token = config["Mapbox_Access_Token"]
 df = pd.read_excel("Georeferencing/sample_output.xlsx")
 
 
-#function to get the dataframe updated
+# function to get the dataframe updated
 def getData():
     df_table = df
-    #if n > 0:
+    # if n > 0:
     print('table')
     print(df_table)
     try:
@@ -42,6 +43,27 @@ def getData():
     print(data)
     return data
 
+
+####define card
+card = dbc.Card(
+    id="card-counter",
+    children=[
+        #dbc.CardImg(src="/images/backgroung.png", top=True),
+        dbc.CardBody(
+            [
+                html.H4("Total number of tweets detected", className="card-title"),
+                html.P(
+                    "18",
+                    className="card-text",
+                    style={'font-size':48, 'text-aligned':'center'}
+                ),
+                #dbc.Button("Go somewhere", color="primary"),
+            ]
+        ),
+    ],
+    style={"width": "38vh"},
+)
+############
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -69,7 +91,7 @@ app.layout = html.Div([
                   animate=True
                   ),
         dcc.Graph(id='pie-chart',
-                  style={'display': 'inline-block',  'height': '100vh', 'width':'85vh', 'height':'45vh'},
+                  style={'display': 'inline-block', 'height': '100vh', 'width': '85vh', 'height': '45vh'},
                   # style={'padding-bottom': '2px', 'padding-left': '2px', 'height': '100vh'
                   #                        # , 'width':'80vh'
                   #                        },
@@ -83,9 +105,11 @@ app.layout = html.Div([
                              )
     ]),
 
+    html.Div(children=[card]),
+
     html.Br(),
     html.Br()
-], className='ten columns offset-by-one' #you have a total of 12 columns
+], className='ten columns offset-by-one'  # you have a total of 12 columns
 )
 
 
@@ -99,7 +123,7 @@ def update_map(n):
     df_sub = df
 
     print(df_sub)
-    if n == 0:
+    if 'Bari' not in df_sub.values:
         print('adding new city')
         df_sub.loc[len(df_sub)] = ['Bari', '41.11336132309502', '16.860921999063116', 2]
     else:
@@ -109,7 +133,6 @@ def update_map(n):
         mask = (df_sub['city'] == rd.choice(cities))
         df_sub['tweets'][mask] += rd.choice(values)
     print(n)
-
 
     # Create figure
     locations = [go.Scattermapbox(
@@ -154,34 +177,71 @@ def update_map(n):
 # -----------------------------------------------------------------
 # test with line chart
 dff = pd.DataFrame(columns=['X', 'Y'])
+
+
 @app.callback(Output('pie-chart', 'figure'),
               Input('interval-component', 'n_intervals'))
-
 def update_pie(n2):
     time = len(dff)
-    dff.loc[len(dff)] = [time, rd.randint(1,101)]
+    dff.loc[len(dff)] = [time, rd.randint(1, 101)]
     print(dff)
-
+    trace = plotly.graph_objs.Scatter(
+        x=list(dff['X']),
+        y=list(dff['Y']),
+        name='Scatter',
+        mode='lines+markers'
+    )
     # fig = px.line(dff, x=dff['X'], y=dff['Y'])
     # fig = fig.update_layout(yaxis={'title':'Count'}, xaxis={'title':'Timeline'},
     #                   title={'text':'Number of tweets detected',
     #                   'font':{'size':28},'x':0.5,'xanchor':'center'})
-    data = go.Line(x=list(dff['X']), y=list(dff['Y']), mode= 'lines+markers')
-    return {'data':data, 'layout' : go.Layout(xaxis=dict(range=[dff['X'].min(),dff['X'].max()], title='Timeline'),
-                                                yaxis=dict(range=[dff['Y'].min(),dff['Y'].max()], title='Count' ))
+    return {'data': [trace],
+            'layout': go.Layout(
+                xaxis=dict(range=[dff['X'].min(), dff['X'].max()]),
+                yaxis=dict(range=[dff['Y'].min(), dff['Y'].max()]))
             }
 
 
 # -----------------------------------------------------------------
-# test with table
+# update table
 @app.callback(Output('count-table', 'data'),
               Input('interval-component', 'n_intervals')
               # ,
               # [State('count-table', 'data')]
-)
-
+              )
 def update_table(n):
     return getData()
+
+# update card
+@app.callback(Output('card-counter', 'children'),
+              Input('interval-component', 'n_intervals')
+              # ,
+              # [State('count-table', 'data')]
+              )
+def update_card(n):
+    #link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
+    maxVal = dff['Y'].sum()
+    newCard = dbc.Card(
+        id="card-counter",
+        children=[
+            #dbc.CardImg(src="/images/backgroung.png", top=True),
+            dbc.CardBody(
+                [
+                    html.H4("Total number of tweets detected", className="card-title"),
+                    html.P(
+                        "{0}".format(maxVal),
+                        className="card-text",
+                        style={'font-size':48, 'text-aligned':'center'}
+                    ),
+                    #dbc.Button("Go somewhere", color="primary"),
+                ]
+            ),
+        ],
+        style={"width": "38vh"},
+    )
+    return newCard
+
+
 # #--------------------------------------------------------------
 
 if __name__ == '__main__':
