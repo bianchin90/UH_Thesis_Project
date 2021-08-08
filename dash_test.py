@@ -22,7 +22,6 @@ import plotly.express as px
 import dash_table
 import dash_bootstrap_components as dbc
 
-
 with open('Profile.json') as profile:
     config = json.load(profile)
 
@@ -30,12 +29,18 @@ mapbox_access_token = config["Mapbox_Access_Token"]
 
 df = pd.read_excel("Georeferencing/sample_output.xlsx")
 
+# emotions dataframe
+emotions = pd.DataFrame({'Col1': ['fear', 'joy', 'anger', 'sadness'], 'Value': [100] * 4})
+emotions['random'] = np.around(np.random.dirichlet
+                               (np.ones(emotions.shape[0]), size=1)[0],
+                               decimals=1)
+emotions['percentage'] = (emotions['Value'] * emotions['random']).astype(int)
 
-#function to get the dataframe updated
+
+# function to get the dataframe updated
 def getData():
-    #df_table = df
     df_table = df.sort_values(by='tweets', ascending=False)
-    #if n > 0:
+    # if n > 0:
     print('table')
     print(df_table)
     try:
@@ -45,36 +50,56 @@ def getData():
     print(data)
     return data
 
+
 ####define card
 card = dbc.Card(
     id="card-counter",
     children=[
-        #dbc.CardImg(src="/images/backgroung.png", top=True),
+        # dbc.CardImg(src="images/background.jpg", top=True),
         dbc.CardBody(
             [
                 html.H4("Total number of tweets detected", className="card-title"),
                 html.P(
                     "18",
                     className="card-text",
-                    style={'font-size':48, 'text-aligned':'center'}
+                    style={'font-size': 48, 'text-aligned': 'center'}
                 ),
-                #dbc.Button("Go somewhere", color="primary"),
+                # dbc.Button("Go somewhere", color="primary"),
             ]
         ),
     ],
-    style={"width": "38vh"},
+
+    # style={"width": "38vh"},
+
 )
 ############
-
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+# bootsrap themes https://bootswatch.com/default/
+# external_stylesheets=[dbc.themes.BOOTSTRAP]
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 blackbold = {'color': 'black', 'font-weight': 'bold'}
 
-app.layout = html.Div(
-    style= {'background-image': "url('images/background.jpg')"},
-    children=[
+
+#############test with multiple cards
+def return_card(title, text):
+    card_content = [
+        #dbc.CardHeader("Card header"),
+        dbc.CardBody(
+            [
+                html.H4(title, className="card-title"),
+                html.P(
+                    text,
+                    className="card-text",
+                ),
+            ]
+        ),
+    ]
+    return card_content
+
+
+app.layout = html.Div([
+    # ---------------------------------------------------------------
     ####################àhtml.H1("Quickker - Faster is Better"),
     # Map_legen + Borough_checklist + Recycling_type_checklist + Web_link + Map
     # Map
@@ -83,9 +108,31 @@ app.layout = html.Div(
         interval=1 * 10000,  # in milliseconds
         n_intervals=0
     ),
+
+    html.H4("Quickker - Faster is Better", className="card-title",
+            style={'font-size': 64, 'text-align': 'center', 'color':'red'}),
+
+
+    html.Br(),
+    html.Br(),
+    # test with multiple cards
+    html.Div(children=[
+        dbc.Row([card,
+                 #dbc.Col(dbc.Card(id="card-counter",children=[return_card('Total Number of tweets detected', '0')], color="primary", inverse=True)),
+                 dbc.Col(dbc.Card(return_card('Overall Severity', '12'), color="secondary", inverse=True)),
+                 dbc.Col(dbc.Card(return_card('City mostly involved', 'Cartago'), color="info", inverse=True)),
+                 dbc.Col(dbc.Card(return_card('More widespread sentiment', 'Your sister'), color="warning", inverse=True))
+                 ],
+                className="mb-4"),
+        # dbc.Row([dbc.Col(dbc.Card(return_card('City mostly involved', 'Cartago'), color="info", inverse=True)),
+        #          dbc.Col(
+        #              dbc.Card(return_card('More widespread sentiment', 'Your sister'), color="warning", inverse=True))],
+        #         className="mb-4")
+    ]),
+
     html.Div(children=[
         dcc.Graph(id='graph',
-                  style={'display': 'inline-block', 'height': '100vh'},
+                  style={'display': 'inline-block', 'height': '100vh', 'width':'150vh'},
                   config={'displayModeBar': False, 'scrollZoom': True},
                   # style={'padding-bottom': '2px', 'padding-left': '2px', 'height': '100vh'
                   #        # , 'width':'180vh'
@@ -93,7 +140,7 @@ app.layout = html.Div(
                   animate=True
                   ),
         dcc.Graph(id='line-chart',
-                  style={'display': 'inline-block',  'height': '100vh', 'width':'85vh', 'height':'45vh'},
+                  style={'display': 'inline-block', 'height': '100vh', 'width': '85vh', 'height': '45vh'},
                   # style={'padding-bottom': '2px', 'padding-left': '2px', 'height': '100vh'
                   #                        # , 'width':'80vh'
                   #                        },
@@ -107,11 +154,15 @@ app.layout = html.Div(
                              )
     ]),
 
-    html.Div(children=[card]),
+    # card
+    # html.Div(children=[card]),
+
+    # pie chart
+    html.Div([dcc.Graph(id='pie-chart')]),
 
     html.Br(),
     html.Br()
-], className='ten columns offset-by-one' #you have a total of 12 columns
+], className='ten columns offset-by-one'  # you have a total of 12 columns
 )
 
 
@@ -125,7 +176,7 @@ def update_map(n):
     df_sub = df
 
     print(df_sub)
-    if 'Bari' not in df_sub.values :
+    if 'Bari' not in df_sub.values:
         print('adding new city')
         df_sub.loc[len(df_sub)] = ['Bari', '41.11336132309502', '16.860921999063116', 2]
     else:
@@ -135,7 +186,6 @@ def update_map(n):
         mask = (df_sub['city'] == rd.choice(cities))
         df_sub['tweets'][mask] += rd.choice(values)
     print(n)
-
 
     # Create figure
     locations = [go.Scattermapbox(
@@ -180,12 +230,13 @@ def update_map(n):
 # -----------------------------------------------------------------
 # test with line chart
 dff = pd.DataFrame(columns=['X', 'Y'])
+
+
 @app.callback(Output('line-chart', 'figure'),
               Input('interval-component', 'n_intervals'))
-
-def update_linePlot(n):
+def update_line(n2):
     time = len(dff)
-    dff.loc[len(dff)] = [time, rd.randint(1,101)]
+    dff.loc[len(dff)] = [time, rd.randint(1, 101)]
     print(dff)
     trace = plotly.graph_objs.Scatter(
         x=list(dff['X']),
@@ -205,17 +256,15 @@ def update_linePlot(n):
 
 
 # -----------------------------------------------------------------
-# test with table
+# update table
 @app.callback(Output('count-table', 'data'),
               Input('interval-component', 'n_intervals')
               # ,
               # [State('count-table', 'data')]
-)
-
+              )
 def update_table(n):
     return getData()
 
-# #--------------------------------------------------------------
 
 # update card
 @app.callback(Output('card-counter', 'children'),
@@ -224,21 +273,21 @@ def update_table(n):
               # [State('count-table', 'data')]
               )
 def update_card(n):
-    #link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
+    # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
     maxVal = dff['Y'].sum()
     newCard = dbc.Card(
         id="card-counter",
         children=[
-            #dbc.CardImg(src="/images/backgroung.png", top=True),
+            # dbc.CardImg(src="/images/backgroung.png", top=True),
             dbc.CardBody(
                 [
                     html.H4("Total number of tweets detected", className="card-title"),
                     html.P(
                         "{0}".format(maxVal),
                         className="card-text",
-                        style={'font-size':48, 'text-aligned':'center'}
+                        style={'font-size': 48, 'text-aligned': 'center'}
                     ),
-                    #dbc.Button("Go somewhere", color="primary"),
+                    # dbc.Button("Go somewhere", color="primary"),
                 ]
             ),
         ],
@@ -248,6 +297,39 @@ def update_card(n):
 
 
 # #--------------------------------------------------------------
+# update pie chart
+@app.callback(Output('pie-chart', 'figure'),
+              Input('interval-component', 'n_intervals')
+              )
+def update_pie(n):
+    # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
+    emotions = pd.DataFrame({'Col1': ['fear', 'joy', 'anger', 'sadness'], 'Value': [100] * 4})
+    emotions['random'] = np.around(np.random.dirichlet
+                                   (np.ones(emotions.shape[0]), size=1)[0],
+                                   decimals=1)
+    emotions['percentage'] = (emotions['Value'] * emotions['random']).astype(int)
+
+    pie_chart = px.pie(
+        data_frame=emotions,
+        values='percentage',
+        names='Col1',
+        color='Col1',  # differentiate markers (discrete) by color
+        color_discrete_sequence=["red", "green", "blue", "orange"],  # set marker colors
+        # color_discrete_map={"WA":"yellow","CA":"red","NY":"black","FL":"brown"},
+        hover_name='random',  # values appear in bold in the hover tooltip
+        # hover_data=['positive'],            #values appear as extra data in the hover tooltip
+        # custom_data=['total'],              #values are extra data to be used in Dash callbacks
+        labels={"Col1": "Feeling"},  # map the labels
+        title="Users' feelings",  # figure title
+        template='presentation',  # 'ggplot2', 'seaborn', 'simple_white', 'plotly',
+        # 'plotly_white', 'plotly_dark', 'presentation',
+        # 'xgridoff', 'ygridoff', 'gridon', 'none'
+        width=800,  # figure width in pixels
+        height=600,  # figure height in pixels
+        hole=0.5,  # represents the hole in middle of pie
+    )
+    return pie_chart
+
 
 if __name__ == '__main__':
     app.run_server(debug=False, dev_tools_hot_reload=True)
