@@ -40,6 +40,7 @@ emotions['percentage'] = (emotions['Value'] * emotions['random']).astype(int)
 # function to get the dataframe updated
 def getData():
     df_table = df.sort_values(by='tweets', ascending=False)
+    df_table = df_table[['city', 'tweets']]
     # if n > 0:
     print('table')
     print(df_table)
@@ -51,27 +52,6 @@ def getData():
     return data
 
 
-####define card
-card = dbc.Card(
-    id="card-counter",
-    children=[
-        # dbc.CardImg(src="images/background.jpg", top=True),
-        dbc.CardBody(
-            [
-                html.H4("Total number of tweets detected", className="card-title"),
-                html.P(
-                    "18",
-                    className="card-text",
-                    style={'font-size': 48, 'text-aligned': 'center'}
-                ),
-                # dbc.Button("Go somewhere", color="primary"),
-            ]
-        ),
-    ],
-
-    # style={"width": "38vh"},
-
-)
 ############
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 # bootsrap themes https://bootswatch.com/default/
@@ -84,7 +64,7 @@ blackbold = {'color': 'black', 'font-weight': 'bold'}
 #############test with multiple cards
 def return_card(title, text):
     card_content = [
-        #dbc.CardHeader("Card header"),
+        # dbc.CardHeader("Card header"),
         dbc.CardBody(
             [
                 html.H4(title, className="card-title"),
@@ -110,55 +90,72 @@ app.layout = html.Div([
     ),
 
     html.H4("Quickker - Faster is Better", className="card-title",
-            style={'font-size': 64, 'text-align': 'center', 'color':'red'}),
-
+            style={'font-size': 64, 'text-align': 'center', 'color': 'red'}),
 
     html.Br(),
     html.Br(),
     # test with multiple cards
     html.Div(children=[
-        dbc.Row([card,
-                 #dbc.Col(dbc.Card(id="card-counter",children=[return_card('Total Number of tweets detected', '0')], color="primary", inverse=True)),
-                 dbc.Col(dbc.Card(return_card('Overall Severity', '12'), color="secondary", inverse=True)),
-                 dbc.Col(dbc.Card(return_card('City mostly involved', 'Cartago'), color="info", inverse=True)),
-                 dbc.Col(dbc.Card(return_card('More widespread sentiment', 'Your sister'), color="warning", inverse=True))
-                 ],
-                className="mb-4"),
+        dbc.Row([  # card,
+            dbc.Col(dbc.Card(return_card('Total N° of tweets detected', '0'), color="primary", inverse=True,
+                             id='card-counter')),
+            dbc.Col(dbc.Card(return_card('Overall Severity', '12'), color="secondary", inverse=True,
+                             id='severity-counter')),
+            dbc.Col(dbc.Card(return_card('City mostly involved', 'Cartago'), color="info", inverse=True,
+                             id='city-counter')),
+            dbc.Col(dbc.Card(return_card('Most widespread sentiment', 'Your sister'), color="warning", inverse=True,
+                             id='sentiment-counter'))
+        ],
+            className="mb-4"),
         # dbc.Row([dbc.Col(dbc.Card(return_card('City mostly involved', 'Cartago'), color="info", inverse=True)),
         #          dbc.Col(
         #              dbc.Card(return_card('More widespread sentiment', 'Your sister'), color="warning", inverse=True))],
         #         className="mb-4")
     ]),
 
-    html.Div(children=[
-        dcc.Graph(id='graph',
-                  style={'display': 'inline-block', 'height': '100vh', 'width':'150vh'},
-                  config={'displayModeBar': False, 'scrollZoom': True},
-                  # style={'padding-bottom': '2px', 'padding-left': '2px', 'height': '100vh'
-                  #        # , 'width':'180vh'
-                  #        },
-                  animate=True
-                  ),
-        dcc.Graph(id='line-chart',
-                  style={'display': 'inline-block', 'height': '100vh', 'width': '85vh', 'height': '45vh'},
-                  # style={'padding-bottom': '2px', 'padding-left': '2px', 'height': '100vh'
-                  #                        # , 'width':'80vh'
-                  #                        },
-                  animate=True),  # TEST WITH ANOTHER CHART
+    dbc.Row(children=[
+        dbc.Col(
+            dcc.Graph(id='graph',
+                      #style={'display': 'inline-block'},
+                      style={'display': 'inline-block', 'height': '100vh', 'width': '150vh'},
+                      config={'displayModeBar': False, 'scrollZoom': True},
+                      # style={'padding-bottom': '2px', 'padding-left': '2px', 'height': '100vh'
+                      #        # , 'width':'180vh'
+                      #        },
+                      animate=True
+                      )),
+        dbc.Col(
+            [html.Div('Cities impacted', style={'color': 'green', 'fontSize': 50}),
+             html.Br(),
+            dash_table.DataTable(
+                      id='count-table',
+                      # columns=[{"name": i, "id": i} for i in df.columns],
+                      columns=[{'name': 'city', 'id': 'city'},
+                               {'name': 'tweets', 'id': 'tweets'}],
+                      # title='Cities impacted',
+                      data=getData(),
+                      )],
+
+        ),
+
     ]),
 
-    html.Div(children=[
-        dash_table.DataTable(id='count-table',
-                             columns=[{"name": i, "id": i} for i in df.columns],
-                             data=getData(),
-                             )
+    dbc.Row(children=[
+        dbc.Col(
+            [html.Div('Number of tweets detected', style={'color': 'green', 'fontSize': 50, 'text-align':'center'}),
+            dcc.Graph(id='line-chart',
+                      style={'display': 'inline-block', 'height': '60vh', 'width': '100vh'},
+                      animate=True
+                      )],  # TEST WITH ANOTHER CHART
+        ),
+        dbc.Col(dcc.Graph(id='pie-chart'))
     ]),
 
     # card
     # html.Div(children=[card]),
 
     # pie chart
-    html.Div([dcc.Graph(id='pie-chart')]),
+    #html.Div([dcc.Graph(id='pie-chart')]),
 
     html.Br(),
     html.Br()
@@ -242,7 +239,8 @@ def update_line(n2):
         x=list(dff['X']),
         y=list(dff['Y']),
         name='Scatter',
-        mode='lines+markers'
+        mode='lines+markers',
+        #title='Number of tweets detected'
     )
     # fig = px.line(dff, x=dff['X'], y=dff['Y'])
     # fig = fig.update_layout(yaxis={'title':'Count'}, xaxis={'title':'Timeline'},
@@ -273,37 +271,50 @@ def update_table(n):
               # [State('count-table', 'data')]
               )
 def update_card(n):
-    # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
+    #     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
     maxVal = dff['Y'].sum()
-    newCard = dbc.Card(
-        id="card-counter",
-        children=[
-            # dbc.CardImg(src="/images/backgroung.png", top=True),
-            dbc.CardBody(
-                [
-                    html.H4("Total number of tweets detected", className="card-title"),
-                    html.P(
-                        "{0}".format(maxVal),
-                        className="card-text",
-                        style={'font-size': 48, 'text-aligned': 'center'}
-                    ),
-                    # dbc.Button("Go somewhere", color="primary"),
-                ]
-            ),
-        ],
-        style={"width": "38vh"},
-    )
+    newCard = return_card("Total N° of tweets detected", str(maxVal))
     return newCard
 
 
-# #--------------------------------------------------------------
+# --------------------------------------------------------------
+# update city counter
+@app.callback(Output('city-counter', 'children'),
+              Input('interval-component', 'n_intervals')
+              # ,
+              # [State('count-table', 'data')]
+              )
+def update_city(n):
+    #     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
+    df_city = df.sort_values(by='tweets', ascending=False)
+    newCard = return_card("City mostly involved", df_city['city'].iloc[0])
+    return newCard
+
+
+# --------------------------------------------------------------
+# update sentiment counter
+@app.callback(Output('sentiment-counter', 'children'),
+              Input('interval-component', 'n_intervals')
+              # ,
+              # [State('count-table', 'data')]
+              )
+def update_city(n):
+    # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
+    best_feel = emotions.sort_values(by='percentage', ascending=False)
+    newCard = return_card("Most widespread sentiment", best_feel['Col1'].iloc[0])
+    return newCard
+
+
+# --------------------------------------------------------------
+
+# --------------------------------------------------------------
 # update pie chart
 @app.callback(Output('pie-chart', 'figure'),
               Input('interval-component', 'n_intervals')
               )
 def update_pie(n):
     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
-    emotions = pd.DataFrame({'Col1': ['fear', 'joy', 'anger', 'sadness'], 'Value': [100] * 4})
+    # emotions = pd.DataFrame({'Col1': ['fear', 'joy', 'anger', 'sadness'], 'Value': [100] * 4})
     emotions['random'] = np.around(np.random.dirichlet
                                    (np.ones(emotions.shape[0]), size=1)[0],
                                    decimals=1)
@@ -320,7 +331,7 @@ def update_pie(n):
         # hover_data=['positive'],            #values appear as extra data in the hover tooltip
         # custom_data=['total'],              #values are extra data to be used in Dash callbacks
         labels={"Col1": "Feeling"},  # map the labels
-        title="Users' feelings",  # figure title
+        title="Users' feelings",# figure title
         template='presentation',  # 'ggplot2', 'seaborn', 'simple_white', 'plotly',
         # 'plotly_white', 'plotly_dark', 'presentation',
         # 'xgridoff', 'ygridoff', 'gridon', 'none'
