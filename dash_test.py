@@ -54,9 +54,17 @@ def getData():
 
 ############
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+FONT_AWESOME = "https://use.fontawesome.com/releases/v5.10.2/css/all.css"
 # bootsrap themes https://bootswatch.com/default/
 # external_stylesheets=[dbc.themes.BOOTSTRAP]
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, FONT_AWESOME])
+
+card_icon = {
+    "color": "white",
+    "textAlign": "center",
+    "fontSize": 30,
+    "margin": "auto",
+}
 
 blackbold = {'color': 'black', 'font-weight': 'bold'}
 
@@ -67,15 +75,26 @@ def return_card(title, text):
         # dbc.CardHeader("Card header"),
         dbc.CardBody(
             [
-                html.H4(title, className="card-title"),
+                html.H4(title, className="card-title", style={'color': 'black'}),
                 html.P(
                     text,
                     className="card-text",
+                    style={'color': 'black'}
                 ),
             ]
         ),
     ]
     return card_content
+
+
+def setCardIcon(className, color):
+    icon = dbc.Card(
+        html.Div(className=className, style=card_icon),
+        className="bg-primary",
+        style={"maxWidth": 75},
+        color=color
+    )
+    return icon
 
 
 app.layout = html.Div([
@@ -97,26 +116,32 @@ app.layout = html.Div([
     # test with multiple cards
     html.Div(children=[
         dbc.Row([  # card,
-            dbc.Col(dbc.Card(return_card('Total N° of tweets detected', '0'), color="primary", inverse=True,
-                             id='card-counter')),
-            dbc.Col(dbc.Card(return_card('Overall Severity', '12'), color="secondary", inverse=True,
-                             id='severity-counter')),
-            dbc.Col(dbc.Card(return_card('City mostly involved', 'Cartago'), color="info", inverse=True,
-                             id='city-counter')),
-            dbc.Col(dbc.Card(return_card('Most widespread sentiment', 'Your sister'), color="warning", inverse=True,
-                             id='sentiment-counter'))
+            dbc.Col(dbc.CardGroup(
+                [dbc.Card(return_card('Total N° of tweets detected', '0'), inverse=True, id='card-counter'),
+                 setCardIcon('fa fa-notes-medical', 'primary')], className="mt-4 shadow", )),
+
+            dbc.Col(dbc.CardGroup(
+                [dbc.Card(return_card('Overall Severity', '0'), inverse=True, id='severity-counter'),
+                 setCardIcon('fa fa-exclamation-triangle', 'danger')], className="mt-4 shadow", )),
+
+            dbc.Col(dbc.CardGroup(
+                [dbc.Card(return_card('City mostly involved', 'Cartago'), inverse=True, id='city-counter'),
+                 setCardIcon('fa fa-map-marker-alt', 'success')], className="mt-4 shadow", )),
+
+            dbc.Col(dbc.CardGroup(
+                [dbc.Card(return_card('More widespread sentiment', 'No idea'), inverse=True, id='sentiment-counter'),
+                 setCardIcon('fa fa-meh', 'warning')], className="mt-4 shadow", ))
+
         ],
             className="mb-4"),
-        # dbc.Row([dbc.Col(dbc.Card(return_card('City mostly involved', 'Cartago'), color="info", inverse=True)),
-        #          dbc.Col(
-        #              dbc.Card(return_card('More widespread sentiment', 'Your sister'), color="warning", inverse=True))],
-        #         className="mb-4")
     ]),
+
+    html.Br(),
 
     dbc.Row(children=[
         dbc.Col(
             dcc.Graph(id='graph',
-                      #style={'display': 'inline-block'},
+                      # style={'display': 'inline-block'},
                       style={'display': 'inline-block', 'height': '100vh', 'width': '150vh'},
                       config={'displayModeBar': False, 'scrollZoom': True},
                       # style={'padding-bottom': '2px', 'padding-left': '2px', 'height': '100vh'
@@ -127,39 +152,47 @@ app.layout = html.Div([
         dbc.Col(
             [html.Div('Cities impacted', style={'color': 'green', 'fontSize': 50}),
              html.Br(),
-            dash_table.DataTable(
-                      id='count-table',
-                      # columns=[{"name": i, "id": i} for i in df.columns],
-                      columns=[{'name': 'city', 'id': 'city'},
-                               {'name': 'tweets', 'id': 'tweets'}],
-                      # title='Cities impacted',
-                      data=getData(),
-                      )],
+             dash_table.DataTable(
+                 id='count-table',
+                 # columns=[{"name": i, "id": i} for i in df.columns],
+                 columns=[{'name': 'City', 'id': 'city'},
+                          {'name': 'Tweets', 'id': 'tweets'}],
+                 # title='Cities impacted',
+                 data=getData(),
+                 style_cell={'textAlign': 'left', 'font-family':'sans-serif', 'border': '2px solid grey'},
+                 style_header={
+                     'backgroundColor': 'rgb(8, 91, 94)',
+                     'fontWeight': 'bold'
+                 },
+                 style_data_conditional=[
+                     {
+                         'if': {'row_index': 'odd'},
+                         'backgroundColor': 'rgb(141, 239, 242)'
+                     }],
+             )],
 
         ),
 
-    ]),
+    ], style={'background-color': 'dark-gray'}),
 
     dbc.Row(children=[
         dbc.Col(
-            [html.Div('Number of tweets detected', style={'color': 'green', 'fontSize': 50, 'text-align':'center'}),
-            dcc.Graph(id='line-chart',
-                      style={'display': 'inline-block', 'height': '60vh', 'width': '100vh'},
-                      animate=True
-                      )],  # TEST WITH ANOTHER CHART
+            [html.Div('Number of tweets detected', style={'color': 'green', 'fontSize': 50, 'text-align': 'center'}),
+             dcc.Graph(id='line-chart',
+                       style={'display': 'inline-block', 'height': '60vh', 'width': '100vh'},
+                       animate=True
+                       )],  # TEST WITH ANOTHER CHART
         ),
-        dbc.Col(dcc.Graph(id='pie-chart'))
+        dbc.Col(
+            [html.Div("Users' feelings", style={'color': 'green', 'fontSize': 50, 'text-align': 'center'}),
+             dcc.Graph(id='pie-chart')])
     ]),
-
-    # card
-    # html.Div(children=[card]),
-
-    # pie chart
-    #html.Div([dcc.Graph(id='pie-chart')]),
 
     html.Br(),
     html.Br()
-], className='ten columns offset-by-one'  # you have a total of 12 columns
+],
+    className='ten columns offset-by-one',  # you have a total of 12 columns
+    #style={'backgroundColor': 'black'}
 )
 
 
@@ -239,17 +272,19 @@ def update_line(n2):
         x=list(dff['X']),
         y=list(dff['Y']),
         name='Scatter',
-        mode='lines+markers',
-        #title='Number of tweets detected'
+        mode='lines+markers'
+        # title='Number of tweets detected'
     )
     # fig = px.line(dff, x=dff['X'], y=dff['Y'])
     # fig = fig.update_layout(yaxis={'title':'Count'}, xaxis={'title':'Timeline'},
     #                   title={'text':'Number of tweets detected',
     #                   'font':{'size':28},'x':0.5,'xanchor':'center'})
+
     return {'data': [trace],
             'layout': go.Layout(
                 xaxis=dict(range=[dff['X'].min(), dff['X'].max()]),
                 yaxis=dict(range=[dff['Y'].min(), dff['Y'].max()]))
+
             }
 
 
@@ -298,7 +333,7 @@ def update_city(n):
               # ,
               # [State('count-table', 'data')]
               )
-def update_city(n):
+def update_sentiment(n):
     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
     best_feel = emotions.sort_values(by='percentage', ascending=False)
     newCard = return_card("Most widespread sentiment", best_feel['Col1'].iloc[0])
@@ -331,8 +366,8 @@ def update_pie(n):
         # hover_data=['positive'],            #values appear as extra data in the hover tooltip
         # custom_data=['total'],              #values are extra data to be used in Dash callbacks
         labels={"Col1": "Feeling"},  # map the labels
-        title="Users' feelings",# figure title
-        template='presentation',  # 'ggplot2', 'seaborn', 'simple_white', 'plotly',
+        #title="Users' feelings",  # figure title
+        template='plotly_dark',  # 'ggplot2', 'seaborn', 'simple_white', 'plotly',
         # 'plotly_white', 'plotly_dark', 'presentation',
         # 'xgridoff', 'ygridoff', 'gridon', 'none'
         width=800,  # figure width in pixels
