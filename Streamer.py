@@ -212,28 +212,31 @@ def process_data() :
             y = y[-N:]
             plt.clf()
 
-        fig1 = plt.figure(1, figsize=(12, 6))  # declare figure
-        plt.title('Number of earthquake-tweets \n') #working
-        plt.plot(x, y)
-        plt.pause(0.05)
+        # fig1 = plt.figure(1, figsize=(12, 6))  # declare figure
+        # plt.title('Number of earthquake-tweets \n') #working
+        # plt.plot(x, y)
+        # plt.pause(0.05)
 
         # pie chart (working)
         tt = pd.value_counts(feelings['feelings'])
         my_labels = feelings.feelings.unique()
         my_explode = (0, 0.1, 0, 0.1)
-        plot2 = plt.figure(2)
-        plt.title('Tweet feelings\n')  # cerca come mostrare due plot allo stesso tempo https://www.kite.com/python/answers/how-to-show-two-figures-at-once-in-matplotlib-in-python
-        plt.clf()
-        plt.pie(tt, labels=my_labels, autopct='%20.1f%%', shadow = True)
+        # plot2 = plt.figure(2)
+        # plt.title('Tweet feelings\n')  # cerca come mostrare due plot allo stesso tempo https://www.kite.com/python/answers/how-to-show-two-figures-at-once-in-matplotlib-in-python
+        # plt.clf()
+        # plt.pie(tt, labels=my_labels, autopct='%20.1f%%', shadow = True)
 
         plt.axis('equal') #resume from here https://datatofish.com/pie-chart-matplotlib/
         # end test
+        print('counter: {0}'.format(counter))
 
-        if counter == 150:
+
+        if counter == 4:
+            print(tt)
+            #print(my_labels)
             break
     print('done')
 
 if __name__ == '__main__':
     process_data()
 
-plt.show()
