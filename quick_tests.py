@@ -27,7 +27,7 @@ with open('Profile.json') as profile:
 
 mapbox_access_token = config["Mapbox_Access_Token"]
 
-df = pd.read_excel("Georeferencing/sample_output.xlsx")
+df_geo = pd.read_excel("Georeferencing/sample_output.xlsx")
 
 # emotions dataframe
 emotions = pd.DataFrame({'Col1': ['fear', 'joy', 'anger', 'sadness'], 'Value': [100] * 4})
@@ -39,7 +39,7 @@ emotions['percentage'] = (emotions['Value'] * emotions['random']).astype(int)
 
 # function to get the dataframe updated
 def getData():
-    df_table = df.sort_values(by='tweets', ascending=False)
+    df_table = df_geo.sort_values(by='tweets', ascending=False)
     df_table = df_table[['city', 'tweets']]
     # if n > 0:
     print('table')
@@ -154,7 +154,7 @@ app.layout = html.Div([
              html.Br(),
              dash_table.DataTable(
                  id='count-table',
-                 # columns=[{"name": i, "id": i} for i in df.columns],
+                 # columns=[{"name": i, "id": i} for i in df_geo.columns],
                  columns=[{'name': 'City', 'id': 'city'},
                           {'name': 'Tweets', 'id': 'tweets'}],
                  # title='Cities impacted',
@@ -321,7 +321,7 @@ def update_card(n):
               )
 def update_city(n):
     #     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
-    df_city = df.sort_values(by='tweets', ascending=False)
+    df_city = df_geo.sort_values(by='tweets', ascending=False)
     newCard = return_card("City mostly involved", df_city['city'].iloc[0])
     return newCard
 
