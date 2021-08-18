@@ -27,7 +27,7 @@ with open('Profile.json') as profile:
 
 mapbox_access_token = config["Mapbox_Access_Token"]
 
-df_geo = pd.read_excel("Georeferencing/sample_output.xlsx")
+df = pd.read_excel("Georeferencing/sample_output.xlsx")
 
 # emotions dataframe
 emotions = pd.DataFrame({'Col1': ['fear', 'joy', 'anger', 'sadness'], 'Value': [100] * 4})
@@ -39,7 +39,7 @@ emotions['percentage'] = (emotions['Value'] * emotions['random']).astype(int)
 
 # function to get the dataframe updated
 def getData():
-    df_table = df_geo.sort_values(by='tweets', ascending=False)
+    df_table = df.sort_values(by='tweets', ascending=False)
     df_table = df_table[['city', 'tweets']]
     # if n > 0:
     print('table')
@@ -154,12 +154,12 @@ app.layout = html.Div([
              html.Br(),
              dash_table.DataTable(
                  id='count-table',
-                 # columns=[{"name": i, "id": i} for i in df_geo.columns],
+                 # columns=[{"name": i, "id": i} for i in df.columns],
                  columns=[{'name': 'City', 'id': 'city'},
                           {'name': 'Tweets', 'id': 'tweets'}],
                  # title='Cities impacted',
                  data=getData(),
-                 style_cell={'textAlign': 'left', 'font-family':'sans-serif', 'border': '2px solid grey'},
+                 style_cell={'textAlign': 'left', 'font-family': 'sans-serif', 'border': '2px solid grey'},
                  style_header={
                      'backgroundColor': 'rgb(8, 91, 94)',
                      'fontWeight': 'bold'
@@ -192,7 +192,7 @@ app.layout = html.Div([
     html.Br()
 ],
     className='ten columns offset-by-one',  # you have a total of 12 columns
-    #style={'backgroundColor': 'black'}
+    # style={'backgroundColor': 'black'}
 )
 
 
@@ -266,7 +266,20 @@ dff = pd.DataFrame(columns=['X', 'Y'])
               Input('interval-component', 'n_intervals'))
 def update_line(n2):
     time = len(dff)
-    dff.loc[len(dff)] = [time, rd.randint(1, 101)]
+    #######testing
+    try:
+        streamed = pd.read_csv('Stream_Data/Earthquakes_Detection.csv', sep=',')
+    except:
+        streamed = pd.DataFrame(columns=['X', 'Y'])
+    if len(streamed) > 0 :
+        new_streamed = streamed[time:]
+        print(new_streamed)
+        ###### end testing
+        #dff.loc[len(dff)] = [time, rd.randint(1, 101)]
+        #dff = dff.append(new_streamed, ignore_index=True)
+        for index, row in new_streamed.iterrows():
+            if index >= time:
+                dff.loc[index] = [row['X'], row['Y']]
     print(dff)
     trace = plotly.graph_objs.Scatter(
         x=list(dff['X']),
@@ -321,7 +334,7 @@ def update_card(n):
               )
 def update_city(n):
     #     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
-    df_city = df_geo.sort_values(by='tweets', ascending=False)
+    df_city = df.sort_values(by='tweets', ascending=False)
     newCard = return_card("City mostly involved", df_city['city'].iloc[0])
     return newCard
 
@@ -366,7 +379,7 @@ def update_pie(n):
         # hover_data=['positive'],            #values appear as extra data in the hover tooltip
         # custom_data=['total'],              #values are extra data to be used in Dash callbacks
         labels={"Col1": "Feeling"},  # map the labels
-        #title="Users' feelings",  # figure title
+        # title="Users' feelings",  # figure title
         template='plotly_dark',  # 'ggplot2', 'seaborn', 'simple_white', 'plotly',
         # 'plotly_white', 'plotly_dark', 'presentation',
         # 'xgridoff', 'ygridoff', 'gridon', 'none'
