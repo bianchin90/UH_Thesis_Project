@@ -30,11 +30,12 @@ mapbox_access_token = config["Mapbox_Access_Token"]
 df = pd.read_excel("Georeferencing/sample_output.xlsx")
 
 # emotions dataframe
-emotions = pd.DataFrame({'Col1': ['fear', 'joy', 'anger', 'sadness'], 'Value': [100] * 4})
-emotions['random'] = np.around(np.random.dirichlet
-                               (np.ones(emotions.shape[0]), size=1)[0],
-                               decimals=1)
-emotions['percentage'] = (emotions['Value'] * emotions['random']).astype(int)
+emotions = pd.read_csv("Stream_Data/SentimentResults.csv", sep=',')
+# emotions = pd.DataFrame({'Col1': ['fear', 'joy', 'anger', 'sadness'], 'Value': [100] * 4})
+# emotions['random'] = np.around(np.random.dirichlet
+#                                (np.ones(emotions.shape[0]), size=1)[0],
+#                                decimals=1)
+# emotions['percentage'] = (emotions['Value'] * emotions['random']).astype(int)
 
 
 # function to get the dataframe updated
@@ -348,8 +349,15 @@ def update_city(n):
               )
 def update_sentiment(n):
     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
-    best_feel = emotions.sort_values(by='percentage', ascending=False)
-    newCard = return_card("Most widespread sentiment", best_feel['Col1'].iloc[0])
+    emotions = pd.read_csv("Stream_Data/SentimentResults.csv", sep=',')
+    sent = emotions['feelings'].value_counts(normalize=True) * 100
+    real_sent = pd.DataFrame(sent)
+    real_sent = real_sent.reset_index()
+    real_sent = real_sent.rename(columns={'index': 'label'})
+    real_sent['feelings'] = real_sent['feelings'].round().astype(int)
+
+    best_feel = real_sent.sort_values(by='feelings', ascending=False)
+    newCard = return_card("Most widespread sentiment", best_feel['label'].iloc[0])
     return newCard
 
 
@@ -363,22 +371,30 @@ def update_sentiment(n):
 def update_pie(n):
     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
     # emotions = pd.DataFrame({'Col1': ['fear', 'joy', 'anger', 'sadness'], 'Value': [100] * 4})
-    emotions['random'] = np.around(np.random.dirichlet
-                                   (np.ones(emotions.shape[0]), size=1)[0],
-                                   decimals=1)
-    emotions['percentage'] = (emotions['Value'] * emotions['random']).astype(int)
+    # emotions['random'] = np.around(np.random.dirichlet
+    #                                (np.ones(emotions.shape[0]), size=1)[0],
+    #                                decimals=1)
+    # emotions['percentage'] = (emotions['Value'] * emotions['random']).astype(int)
+
+    emotions = pd.read_csv("Stream_Data/SentimentResults.csv", sep=',')
+    sent = emotions['feelings'].value_counts(normalize=True) * 100
+
+    real_sent = pd.DataFrame(sent)
+    real_sent = real_sent.reset_index()
+    real_sent = real_sent.rename(columns={'index': 'label'})
+    real_sent['feelings'] = real_sent['feelings'].round().astype(int)
 
     pie_chart = px.pie(
-        data_frame=emotions,
-        values='percentage',
-        names='Col1',
-        color='Col1',  # differentiate markers (discrete) by color
+        data_frame=real_sent,
+        values='feelings',
+        names='label',
+        color='label',  # differentiate markers (discrete) by color
         color_discrete_sequence=["red", "green", "blue", "orange"],  # set marker colors
         # color_discrete_map={"WA":"yellow","CA":"red","NY":"black","FL":"brown"},
-        hover_name='random',  # values appear in bold in the hover tooltip
+        hover_name='feelings',  # values appear in bold in the hover tooltip
         # hover_data=['positive'],            #values appear as extra data in the hover tooltip
         # custom_data=['total'],              #values are extra data to be used in Dash callbacks
-        labels={"Col1": "Feeling"},  # map the labels
+        labels={"label": "Feeling"},  # map the labels
         # title="Users' feelings",  # figure title
         template='plotly_dark',  # 'ggplot2', 'seaborn', 'simple_white', 'plotly',
         # 'plotly_white', 'plotly_dark', 'presentation',

@@ -232,6 +232,7 @@ def process_data() :
         tt = pd.value_counts(feelings['feelings'])
         my_labels = feelings.feelings.unique()
         my_explode = (0, 0.1, 0, 0.1)
+        feelings.to_csv('Stream_Data/SentimentResults.csv', index=False)
 
         # end test
         print('counter: {0}'.format(counter))
