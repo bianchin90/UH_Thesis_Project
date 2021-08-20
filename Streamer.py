@@ -13,27 +13,10 @@ nltk.download('stopwords')
 import spacy
 from nltk.corpus import stopwords
 import datetime as dt
-import matplotlib.pyplot as plt
 import recycle
 from feel_it import EmotionClassifier, SentimentClassifier
-
-import random as rd
-from random import random
-
 import pandas as pd
-import numpy as np
-import dash  # (version 1.0.0)
-import dash_table
-import dash_core_components as dcc
-import dash_html_components as html
-from dash.dependencies import Input, Output, State
-import json
-import plotly
-import plotly.offline as py  # (version 4.4.1)
-import plotly.graph_objs as go
-import plotly.express as px
-import dash_table
-import dash_bootstrap_components as dbc
+import Geoprocessing
 
 # set logger
 logging.basicConfig()
@@ -53,6 +36,19 @@ pd.set_option('display.max_columns', None)
 
 # if __name__ == '__main__':
 def process_data() :
+    # define dataframe containing istat cities
+    istat = pd.read_excel('Georeferencing/Elenco-comuni-italiani.xls')
+    istat = istat[['Denominazione (Italiana e straniera)',
+                   "Denominazione dell'Unità territoriale sovracomunale (valida a fini statistici)",
+                   'Denominazione Regione']]
+    istat = istat.rename(columns={'Denominazione (Italiana e straniera)': 'city',
+                                  "Denominazione dell'Unità territoriale sovracomunale (valida a fini statistici)": 'province',
+                                  'Denominazione Regione': 'region'})
+    istat['city'] = istat['city'].apply(lambda x: x.lower())
+
+    #declare output dataframe for geoprocessing
+    geo_df = pd.DataFrame(columns=['city', 'lat', 'lon', 'tweets'])
+
     # load model
     lda = gensim.models.LdaMulticore.load('final_model/final_model.model')
 
@@ -96,6 +92,7 @@ def process_data() :
 
         # keep unnecessary columns
         papers = df[['content']]
+        papers['content'] = papers['content'].replace(',', ' ').replace('  ', ' ')
         # Print out the first rows of papers
         # papers.head()
 
@@ -131,7 +128,7 @@ def process_data() :
         logger.info(' Preparing data for LDA Analysis..')
 
         stop_words = stopwords.words('italian')
-        stop_words.extend(['https', 'http', 'bqjkco', '\xe8', 'xe', 'xf', 'gi', 'pi', 'xec', 'tco'])
+        stop_words.extend(['https', 'http', 'bqjkco', '\xe8', 'xe', 'xf', 'gi', 'pi', 'xec', 'tco', ','])
 
         data = papers.content_processed.values.tolist()
         data_words = list(recycle.sent_to_words(data))
@@ -186,7 +183,9 @@ def process_data() :
         detected = papers[papers['forecast'] == 'Earthquake']
 
         logger.info(' Earthquake tweets detected: {0}'.format(len(detected)))
-
+        # print(detected)
+        # detected.to_csv('Stream_Data/Detected.csv', sep='|',index=False)
+        # print(b)
         if len(detected) > 0:
             # run sentiment analysis
             sentiment_eval = recycle.perform_sentiment_analysis(sentiment_dataset=sentiment, tweet_dataset=detected)
@@ -207,6 +206,12 @@ def process_data() :
             extra = {'feelings': emo}
             feelings = feelings.append(pd.DataFrame(extra))
 
+            #run geoprocessing
+            geoProc = Geoprocessing.find_city(cities_df=istat, tweets=detected['content'].tolist())
+            if len(geoProc) > 0:
+                geo_df = geo_df.append(geoProc)
+                geo_df.to_csv('Stream_Data/CitiesFound.csv', index=False)
+
         x.append(start)
         # y.append(len(n_detection))
         y.append(forecast.count('Earthquake'))
@@ -216,7 +221,7 @@ def process_data() :
         next = next + dt.timedelta(minutes=time_window)
         counter += 1
         # keep only last n records for line plot (fresherst data)
-        N = 15
+        # N = 15
         # using list slicing
         # Get last N elements from list
         # if len(x) > N:
