@@ -27,7 +27,7 @@ logger.info(' modules imported correctly')
 # nlp = spacy.load("it_core_news_sm", disable=['parser', 'ner'])
 def find_city(cities_df, tweets):
     stop_words = stopwords.words('italian')
-    stop_words.extend(['nuova', 'santa', 'santo', 'nuovo', 'va'])
+    # stop_words.extend(['nuova', 'santa', 'santo', 'nuovo', 'va'])
 
     # define geolocator for geocoding
     geolocator = Nominatim(user_agent="Earthquake_Detector")
@@ -58,6 +58,15 @@ def find_city(cities_df, tweets):
     for elem in test_tweets:
         # elem = sentence.lower()
         # process text (tokenization and stopwords)
+        # initializing punctuations string
+        punc = '''+!()-[]{};:'"\,<>./?@#$%^&*_~'''
+
+        # Removing punctuations in string
+        # Using loop + punctuation string
+        for ele in elem:
+            if ele in punc:
+                elem = elem.replace(ele, "")
+        elem = elem.replace('(', '').replace(')', '').replace(',', '')
         text_tokens = word_tokenize(elem)
         print(text_tokens)
 

@@ -27,7 +27,8 @@ with open('Profile.json') as profile:
 
 mapbox_access_token = config["Mapbox_Access_Token"]
 
-df = pd.read_excel("Georeferencing/sample_output.xlsx")
+#df = pd.read_excel("Georeferencing/sample_output.xlsx")
+df = pd.read_csv("Stream_Data/CitiesFound.csv")
 
 # emotions dataframe
 emotions = pd.read_csv("Stream_Data/SentimentResults.csv", sep=',')
@@ -40,7 +41,8 @@ emotions = pd.read_csv("Stream_Data/SentimentResults.csv", sep=',')
 
 # function to get the dataframe updated
 def getData():
-    df_table = df.sort_values(by='tweets', ascending=False)
+    data = pd.read_csv("Stream_Data/CitiesFound.csv")
+    df_table = data.sort_values(by='tweets', ascending=False)
     df_table = df_table[['city', 'tweets']]
     # if n > 0:
     print('table')
@@ -141,7 +143,7 @@ app.layout = html.Div([
 
     dbc.Row(children=[
         dbc.Col(
-            dcc.Graph(id='graph',
+            dcc.Graph(id='map',
                       # style={'display': 'inline-block'},
                       style={'display': 'inline-block', 'height': '100vh', 'width': '150vh'},
                       config={'displayModeBar': False, 'scrollZoom': True},
@@ -199,24 +201,25 @@ app.layout = html.Div([
 
 # ---------------------------------------------------------------
 # Output of Graph
-@app.callback(Output('graph', 'figure'),
+@app.callback(Output('map', 'figure'),
               [Input('interval-component', 'n_intervals')]
               )
 def update_map(n):
     # df_sub = df[(df['tweets'].isin(chosen_boro))]
-    df_sub = df
+    #df_sub = df
+    df_sub = pd.read_csv("Stream_Data/CitiesFound.csv")
 
     print(df_sub)
-    if 'Bari' not in df_sub.values:
-        print('adding new city')
-        df_sub.loc[len(df_sub)] = ['Bari', '41.11336132309502', '16.860921999063116', 2]
-    else:
-        print('Detected new tweet in existing city')
-        values = [0, 1, 2, 3]
-        cities = df_sub.city.unique()
-        mask = (df_sub['city'] == rd.choice(cities))
-        df_sub['tweets'][mask] += rd.choice(values)
-    print(n)
+    # if 'Bari' not in df_sub.values:
+    #     print('adding new city')
+    #     df_sub.loc[len(df_sub)] = ['Bari', '41.11336132309502', '16.860921999063116', 2]
+    # else:
+    #     print('Detected new tweet in existing city')
+    #     values = [0, 1, 2, 3]
+    #     cities = df_sub.city.unique()
+    #     mask = (df_sub['city'] == rd.choice(cities))
+    #     df_sub['tweets'][mask] += rd.choice(values)
+    # print(n)
 
     # Create figure
     locations = [go.Scattermapbox(
@@ -224,7 +227,7 @@ def update_map(n):
         lat=df_sub['lat'],
         mode='markers',
         marker={'color': df_sub['tweets'], 'size': 10},
-        # marker={'color': 'yellow', 'size':10},
+        #marker={'color': 'yellow', 'size':10},
         # unselected={'marker' : {'opacity':0, 'color' : 'black'}},
         # selected={'marker': {'size': 5}},
         hoverinfo='text',
@@ -238,9 +241,9 @@ def update_map(n):
         'data': locations,
         'layout': go.Layout(
             uirevision='foo',  # preserves state of figure/map after callback activated
-            clickmode='event+select',
+            #clickmode='event+select',
             hovermode='closest',
-            hoverdistance=2,
+            hoverdistance=3,
             title=dict(text="Where is the earthquake?", font=dict(size=50, color='green')),
             mapbox=dict(
                 accesstoken=mapbox_access_token,

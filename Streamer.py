@@ -16,7 +16,7 @@ import datetime as dt
 import recycle
 from feel_it import EmotionClassifier, SentimentClassifier
 import pandas as pd
-import Geoprocessing
+import Geoprocessing_Test as Geoprocessing
 
 # set logger
 logging.basicConfig()
@@ -209,7 +209,16 @@ def process_data() :
             #run geoprocessing
             geoProc = Geoprocessing.find_city(cities_df=istat, tweets=detected['content'].tolist())
             if len(geoProc) > 0:
-                geo_df = geo_df.append(geoProc)
+                #test
+                for ix, location in geoProc.iterrows():
+                    if (geo_df['city'] == location['city']).any():
+                        # tweet_counter = geo_df.query('city=={0}'.format(city))['tweets'] +1
+                        mask = (geo_df['city'] == location['city'])
+                        geo_df['tweets'][mask] += location['tweets']
+                    else:
+                        geo_df.loc[len(geo_df)] = [location['city'], location['lat'], location['lon'], 1]
+                #end test
+                # geo_df = geo_df.append(geoProc)
                 geo_df.to_csv('Stream_Data/CitiesFound.csv', index=False)
 
         x.append(start)
