@@ -99,6 +99,7 @@ def setCardIcon(className, color):
     )
     return icon
 
+app_settings = {'background_color' : '#404040'}
 
 app.layout = html.Div([
     # ---------------------------------------------------------------
@@ -172,6 +173,9 @@ app.layout = html.Div([
                          'if': {'row_index': 'odd'},
                          'backgroundColor': 'rgb(141, 239, 242)'
                      }],
+                 # fixed_rows={'headers': True},
+                 # style_table={'height': '80'}
+                 style_table={'height': '80vh', 'overflowY': 'auto'}
              )],
 
         ),
@@ -195,7 +199,7 @@ app.layout = html.Div([
     html.Br()
 ],
     className='ten columns offset-by-one',  # you have a total of 12 columns
-    # style={'backgroundColor': 'black'}
+    style={'backgroundColor': app_settings['background_color']}
 )
 
 
@@ -258,6 +262,7 @@ def update_map(n):
                 pitch=0,  # incidence angle
                 zoom=5
             ),
+            paper_bgcolor=app_settings['background_color']
         )
     }
 
@@ -291,6 +296,7 @@ def update_line(n2):
         y=list(dff['Y']),
         name='Scatter',
         mode='lines+markers'
+
         # title='Number of tweets detected'
     )
     # fig = px.line(dff, x=dff['X'], y=dff['Y'])
@@ -300,8 +306,13 @@ def update_line(n2):
 
     return {'data': [trace],
             'layout': go.Layout(
-                xaxis=dict(range=[dff['X'].min(), dff['X'].max()]),
-                yaxis=dict(range=[dff['Y'].min(), dff['Y'].max()]))
+                xaxis=dict(range=[dff['X'].min(), dff['X'].max()], title='Time', color='white'), #gridcolor='white'
+                yaxis=dict(range=[dff['Y'].min(), dff['Y'].max()], title='Count', color='white'), # gridcolor='white'
+                colorway=['#cc8500'], #set line color
+                paper_bgcolor= app_settings['background_color'],
+                plot_bgcolor= app_settings['background_color'],
+
+            )
 
             }
 
@@ -400,13 +411,18 @@ def update_pie(n):
         # custom_data=['total'],              #values are extra data to be used in Dash callbacks
         labels={"label": "Feeling"},  # map the labels
         # title="Users' feelings",  # figure title
-        template='plotly_dark',  # 'ggplot2', 'seaborn', 'simple_white', 'plotly',
+        # template='plotly_dark',  # 'ggplot2', 'seaborn', 'simple_white', 'plotly',
         # 'plotly_white', 'plotly_dark', 'presentation',
         # 'xgridoff', 'ygridoff', 'gridon', 'none'
         width=800,  # figure width in pixels
         height=600,  # figure height in pixels
         hole=0.5,  # represents the hole in middle of pie
     )
+
+    pie_chart.update_layout({
+                            "plot_bgcolor": "rgba(0, 0, 0, 0)",
+                            "paper_bgcolor": "rgba(0, 0, 0, 0)",
+                            })
     return pie_chart
 
 
