@@ -150,7 +150,7 @@ app.layout = html.Div([
                       # style={'padding-bottom': '2px', 'padding-left': '2px', 'height': '100vh'
                       #        # , 'width':'180vh'
                       #        },
-                      animate=True
+                      #animate=True disable it to pop up automatically markers
                       )),
         dbc.Col(
             [html.Div('Cities impacted', style={'color': 'green', 'fontSize': 50}),
@@ -226,8 +226,9 @@ def update_map(n):
         lon=df_sub['lon'],
         lat=df_sub['lat'],
         mode='markers',
-        marker={'color': df_sub['tweets'], 'size': 10},
-        #marker={'color': 'yellow', 'size':10},
+        # marker={'color': df_sub['city'], 'size': 10}, gives error
+        #marker={'color': df_sub['tweets'], 'size': 10},
+        marker={'color': 'yellow', 'size':10},
         # unselected={'marker' : {'opacity':0, 'color' : 'black'}},
         # selected={'marker': {'size': 5}},
         hoverinfo='text',
