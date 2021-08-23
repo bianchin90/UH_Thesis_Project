@@ -163,19 +163,28 @@ app.layout = html.Div([
                           {'name': 'Tweets', 'id': 'tweets'}],
                  # title='Cities impacted',
                  data=getData(),
-                 style_cell={'textAlign': 'left', 'font-family': 'sans-serif', 'border': '2px solid grey'},
+                 style_cell={'textAlign': 'left', 'font-family': 'sans-serif', 'border': '2px solid black'},
+                 # style_cell_conditional=[
+                 #        {
+                 #            'if': {'column_id': 'city'},
+                 #            'textAlign': 'left'
+                 #        } for c in (['City', 'Tweets'])
+                 #    ],
                  style_header={
-                     'backgroundColor': 'rgb(8, 91, 94)',
-                     'fontWeight': 'bold'
+                     'backgroundColor': '#262626',
+                     'fontWeight': 'bold',
+                     'color': 'white'
                  },
                  style_data_conditional=[
                      {
                          'if': {'row_index': 'odd'},
-                         'backgroundColor': 'rgb(141, 239, 242)'
+                         'backgroundColor': '#808080', # old one rgb(141, 239, 242)
+
                      }],
                  # fixed_rows={'headers': True},
                  # style_table={'height': '80'}
-                 style_table={'height': '80vh', 'overflowY': 'auto'}
+                 style_table={'height': '80vh', 'overflowY': 'auto'},
+                 style_as_list_view=True
              )],
 
         ),
@@ -224,7 +233,8 @@ def update_map(n):
     #     mask = (df_sub['city'] == rd.choice(cities))
     #     df_sub['tweets'][mask] += rd.choice(values)
     # print(n)
-
+    for idx, row in df_sub.iterrows():
+        df_sub.at[idx, 'details'] =  'City: {0} <br>Tweets:{1}'.format(row['city'], row['tweets'])
     # Create figure
     locations = [go.Scattermapbox(
         lon=df_sub['lon'],
@@ -236,7 +246,7 @@ def update_map(n):
         # unselected={'marker' : {'opacity':0, 'color' : 'black'}},
         # selected={'marker': {'size': 5}},
         hoverinfo='text',
-        hovertext=df_sub['tweets'],
+        hovertext=df_sub['details'],
         customdata=df_sub['city'],
 
     )]
@@ -422,6 +432,8 @@ def update_pie(n):
     pie_chart.update_layout({
                             "plot_bgcolor": "rgba(0, 0, 0, 0)",
                             "paper_bgcolor": "rgba(0, 0, 0, 0)",
+                            "font": {"color":"white"}, #legend
+
                             })
     return pie_chart
 
