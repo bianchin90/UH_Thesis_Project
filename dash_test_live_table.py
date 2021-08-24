@@ -163,19 +163,28 @@ app.layout = html.Div([
                           {'name': 'Tweets', 'id': 'tweets'}],
                  # title='Cities impacted',
                  data=getData(),
-                 style_cell={'textAlign': 'left', 'font-family': 'sans-serif', 'border': '2px solid grey'},
+                 style_cell={'textAlign': 'left', 'font-family': 'sans-serif', 'border': '2px solid black'},
+                 # style_cell_conditional=[
+                 #        {
+                 #            'if': {'column_id': 'city'},
+                 #            'textAlign': 'left'
+                 #        } for c in (['City', 'Tweets'])
+                 #    ],
                  style_header={
-                     'backgroundColor': '#595959',
-                     'fontWeight': 'bold'
+                     'backgroundColor': '#262626',
+                     'fontWeight': 'bold',
+                     'color': 'white'
                  },
                  style_data_conditional=[
                      {
                          'if': {'row_index': 'odd'},
-                         'backgroundColor': '#b3e6ff' # old one rgb(141, 239, 242)
+                         'backgroundColor': '#808080', # old one rgb(141, 239, 242)
+
                      }],
                  # fixed_rows={'headers': True},
                  # style_table={'height': '80'}
-                 style_table={'height': '80vh', 'overflowY': 'auto'}
+                 style_table={'height': '80vh', 'overflowY': 'auto'},
+                 style_as_list_view=True
              )],
 
         ),
@@ -423,6 +432,8 @@ def update_pie(n):
     pie_chart.update_layout({
                             "plot_bgcolor": "rgba(0, 0, 0, 0)",
                             "paper_bgcolor": "rgba(0, 0, 0, 0)",
+                            "font": {"color":"white"}, #legend
+
                             })
     return pie_chart
 

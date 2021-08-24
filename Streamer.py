@@ -36,6 +36,7 @@ pd.set_option('display.max_columns', None)
 
 # if __name__ == '__main__':
 def process_data() :
+    tot_emo = []
     # define dataframe containing istat cities
     istat = pd.read_excel('Georeferencing/Elenco-comuni-italiani.xls')
     istat = istat[['Denominazione (Italiana e straniera)',
@@ -195,6 +196,7 @@ def process_data() :
 
             print(sentiment_eval['sentiment_unprocessed'].min())
             print(sentiment_eval['sentiment_unprocessed'].max())
+            print(sentiment_eval['sentiment_value'])
 
             print(' computing emotions analysis..')
             emotion_content = sentiment_eval['content']
@@ -202,6 +204,14 @@ def process_data() :
             # my_emo = set(emo)
             sentiment_eval['emotions'] = emo
             print(emo)
+            for i, r in sentiment_eval.iterrows():
+                tot_emo.append(r['sentiment_value'])
+            print(tot_emo)
+            if len(tot_emo) > 0:
+                print('sum: {0}'.format(sum(tot_emo)))
+                print('len: {0}'.format(len(tot_emo)))
+                print('avg: {0}'.format(sum(tot_emo)/len(tot_emo)))
+            input('press any key to continue:')
 
             extra = {'feelings': emo}
             feelings = feelings.append(pd.DataFrame(extra))
@@ -266,3 +276,7 @@ if __name__ == '__main__':
 #devi capire come combinare il live streaming alla dashboard. prova ad eseguire i due processi in parallelo (magari con un ThreadPool).
 # il data streamer salva i progressi a db (excel)
 # le dash callback aggiornano i dati leggendo il db (excel aggiornato)
+
+
+#sentiment analysis. calcolo della severity, riparti da qui https://www.earthdatascience.org/courses/use-data-open-source-python/intro-to-apis/analyze-tweet-sentiment-in-python/
+# ci sta pure una funzione interessante per rimuovere gli url
