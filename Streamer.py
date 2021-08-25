@@ -61,8 +61,11 @@ def process_data() :
 
     # Read data into papers
     logger.info(' Reading DF..')
-    # raw = pd.read_excel('historical_data/historical_tweets_2012-05-01_2012-06-01.xlsx')
+    # raw = pd.read_excel('historical_data/historical_tweets_2015-12-01_2016-01-01.xlsx')
     raw = pd.read_excel('historical_data/historical_tweets_2016-09-01_2016-10-01.xlsx')
+    for ix, ln in raw.iterrows():
+        nowContent = recycle.remove_url(ln['content'])
+        raw.at[ix, 'content'] = nowContent
     len_df = len(raw)
 
     # sort by date
@@ -191,11 +194,11 @@ def process_data() :
             # run sentiment analysis
             sentiment_eval = recycle.perform_sentiment_analysis(sentiment_dataset=sentiment, tweet_dataset=detected)
             print(' Sentiment analysis results')
-            print(sentiment_eval['sentiment_value'].min())
-            print(sentiment_eval['sentiment_value'].max())
-
-            print(sentiment_eval['sentiment_unprocessed'].min())
-            print(sentiment_eval['sentiment_unprocessed'].max())
+            # print(sentiment_eval['sentiment_value'].min())
+            # print(sentiment_eval['sentiment_value'].max())
+            #
+            # print(sentiment_eval['sentiment_unprocessed'].min())
+            # print(sentiment_eval['sentiment_unprocessed'].max())
             print(sentiment_eval['sentiment_value'])
 
             print(' computing emotions analysis..')
@@ -211,7 +214,13 @@ def process_data() :
                 print('sum: {0}'.format(sum(tot_emo)))
                 print('len: {0}'.format(len(tot_emo)))
                 print('avg: {0}'.format(sum(tot_emo)/len(tot_emo)))
-            input('press any key to continue:')
+
+                severity = pd.DataFrame(columns=['severity'], data=tot_emo)
+                #severity.at[0, 'severity'] = sum(tot_emo)/len(tot_emo)
+                severity.to_csv('Stream_Data/Severity.csv', index=False)
+
+                #scaled values
+            #input('press any key to continue:')
 
             extra = {'feelings': emo}
             feelings = feelings.append(pd.DataFrame(extra))
@@ -260,7 +269,7 @@ def process_data() :
 
         # end test
         print('counter: {0}'.format(counter))
-        time.sleep(2)
+        #time.sleep(2)
 
         if counter == 150:
             print(tt)

@@ -99,7 +99,7 @@ def setCardIcon(className, color):
     )
     return icon
 
-app_settings = {'background_color' : '#404040'}
+app_settings = {'background_color' : '#404040', 'div_text' :'#cccccc'}
 
 app.layout = html.Div([
     # ---------------------------------------------------------------
@@ -112,8 +112,8 @@ app.layout = html.Div([
         n_intervals=0
     ),
 
-    html.H4("Quickker - Faster is Better", className="card-title",
-            style={'font-size': 64, 'text-align': 'center', 'color': 'red'}),
+    html.H4("App Name", className="card-title",
+            style={'font-size': 64, 'text-align': 'center', 'color': app_settings['div_text']}),
 
     html.Br(),
     html.Br(),
@@ -125,7 +125,7 @@ app.layout = html.Div([
                  setCardIcon('fa fa-notes-medical', 'primary')], className="mt-4 shadow", )),
 
             dbc.Col(dbc.CardGroup(
-                [dbc.Card(return_card('Overall Severity', '0'), inverse=True, id='severity-counter'),
+                [dbc.Card(return_card('Severity code', 'Unknown'), inverse=True, id='severity-counter'),
                  setCardIcon('fa fa-exclamation-triangle', 'danger')], className="mt-4 shadow", )),
 
             dbc.Col(dbc.CardGroup(
@@ -154,7 +154,7 @@ app.layout = html.Div([
                       #animate=True disable it to pop up automatically markers
                       )),
         dbc.Col(
-            [html.Div('Cities impacted', style={'color': 'green', 'fontSize': 50}),
+            [html.Div('Cities impacted', style={'color': app_settings['div_text'], 'fontSize': 50}),
              html.Br(),
              dash_table.DataTable(
                  id='count-table',
@@ -193,14 +193,14 @@ app.layout = html.Div([
 
     dbc.Row(children=[
         dbc.Col(
-            [html.Div('Number of tweets detected', style={'color': 'green', 'fontSize': 50, 'text-align': 'center'}),
+            [html.Div('Number of tweets detected', style={'color': app_settings['div_text'], 'fontSize': 50, 'text-align': 'center'}),
              dcc.Graph(id='line-chart',
                        style={'display': 'inline-block', 'height': '60vh', 'width': '100vh'},
                        animate=True
                        )],  # TEST WITH ANOTHER CHART
         ),
         dbc.Col(
-            [html.Div("Users' feelings", style={'color': 'green', 'fontSize': 50, 'text-align': 'center'}),
+            [html.Div("Users' feelings", style={'color': app_settings['div_text'], 'fontSize': 50, 'text-align': 'center'}),
              dcc.Graph(id='pie-chart')])
     ]),
 
@@ -259,7 +259,7 @@ def update_map(n):
             #clickmode='event+select',
             hovermode='closest',
             hoverdistance=3,
-            title=dict(text="Where is the earthquake?", font=dict(size=50, color='green')),
+            title=dict(text="Where is the earthquake?", font=dict(size=50, color='#cccccc')),
             mapbox=dict(
                 accesstoken=mapbox_access_token,
                 bearing=0,  # orientation
@@ -293,14 +293,14 @@ def update_line(n2):
         streamed = pd.DataFrame(columns=['X', 'Y'])
     if len(streamed) > 0 :
         new_streamed = streamed[time:]
-        print(new_streamed)
+        # print(new_streamed)
         ###### end testing
         #dff.loc[len(dff)] = [time, rd.randint(1, 101)]
         #dff = dff.append(new_streamed, ignore_index=True)
         for index, row in new_streamed.iterrows():
             if index >= time:
                 dff.loc[index] = [row['X'], row['Y']]
-    print(dff)
+    # print(dff)
     trace = plotly.graph_objs.Scatter(
         x=list(dff['X']),
         y=list(dff['Y']),
@@ -337,7 +337,7 @@ def update_line(n2):
 def update_table(n):
     return getData()
 
-
+# --------------------------------------------------------------
 # update card
 @app.callback(Output('card-counter', 'children'),
               Input('interval-component', 'n_intervals')
@@ -350,6 +350,28 @@ def update_card(n):
     newCard = return_card("Total N° of tweets detected", str(maxVal))
     return newCard
 
+# --------------------------------------------------------------
+
+# update card
+@app.callback(Output('severity-counter', 'children'),
+              Input('interval-component', 'n_intervals')
+              # ,
+              # [State('count-table', 'data')]
+              )
+def update_severity(n):
+    #     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
+    severity = pd.read_csv('Stream_Data/Severity.csv', sep=',')
+    if len(severity) < 50 :
+        newCard = return_card('Severity code', 'Unknown')
+    else:
+        new_val = severity['severity'].mean()
+        if new_val < -0.8 :
+            newCard = return_card('Severity code', 'Red')
+        elif (new_val >= -0.8) and (new_val < -0.50) :
+            newCard = return_card('Severity code', 'Orange')
+        elif new_val >= -0.5 :
+            newCard = return_card('Severity code', 'Yellow')
+    return newCard
 
 # --------------------------------------------------------------
 # update city counter
@@ -361,6 +383,7 @@ def update_card(n):
 def update_city(n):
     #     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
     df_city = df.sort_values(by='tweets', ascending=False)
+    print(df_city)
     newCard = return_card("City mostly involved", df_city['city'].iloc[0])
     return newCard
 
@@ -382,7 +405,7 @@ def update_sentiment(n):
     real_sent['feelings'] = real_sent['feelings'].round().astype(int)
 
     best_feel = real_sent.sort_values(by='feelings', ascending=False)
-    newCard = return_card("Most widespread sentiment", best_feel['label'].iloc[0])
+    newCard = return_card("Most widespread sentiment", best_feel['label'].iloc[0].capitalize())
     return newCard
 
 

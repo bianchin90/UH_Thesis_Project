@@ -96,3 +96,19 @@ def perform_sentiment_analysis(sentiment_dataset, tweet_dataset):
 
     #print(tweets['sentiment_unprocessed'].min())
     #print(tweets['sentiment_unprocessed'].max())
+
+
+def remove_url(txt):
+    try:
+        # txt = urllib.parse.unquote(txt)
+        # txt = unidecode.unidecode(txt)
+        # for key in unicodeStrings:
+        #     if key in txt:
+        #         txt = txt.replace(key, unicodeStrings[key])
+        txt = " ".join(re.sub("([^0-9A-Za-z \t])|(\w+:\/\/\S+)", "", txt).split())
+
+    except:
+        txt = txt
+
+    return txt
+
