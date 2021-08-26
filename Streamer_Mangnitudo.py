@@ -187,11 +187,28 @@ def process_data() :
 
         detected = papers[(papers['forecast'] == 'Earthquake')] #query on magnitudo  & (papers['content'].str.contains("magnitudo", na=False, case=False))
 
+        #################START TEST
+        # original = pd.read_csv('Georeferencing/earthquake_synonyms.csv', sep=',')
+        #
+        # synonyms = original.term.tolist()
+        # matching = pd.DataFrame(columns=['content'])
+        #
+        # for elem in synonyms:
+        #     sel = papers[papers['content'].str.contains(elem, case=False)]
+        #     sel = sel[['content']]
+        #     matching = matching.append(sel)
+        # matching = matching.drop_duplicates()
+        # detected = papers.merge(matching, on='content')
+        # print(detected.to_string())
+        #################END TEST #questo pezzo qui non serve a nulla perchè annulla il lavoro dell'LDA. prova ad inserirlo nel geoprocesing cercando solo sisma/magnitudo/scossa
+
         logger.info(' Earthquake tweets detected: {0}'.format(len(detected)))
         # print(detected)
         # detected.to_csv('Stream_Data/Detected.csv', sep='|',index=False)
         # print(b)
         if len(detected) > 0:
+            print(detected.to_string())
+            print(b)
             # run sentiment analysis
             sentiment_eval = recycle.perform_sentiment_analysis(sentiment_dataset=sentiment, tweet_dataset=detected)
             print(' Sentiment analysis results')
@@ -244,7 +261,7 @@ def process_data() :
         x.append(start)
         # y.append(len(n_detection))
         y.append(forecast.count('Earthquake'))
-        print(' Earthquakes found in range {0} - {1}: {2}'.format(start, next, forecast.count('Earthquake')))
+        print(' Earthquakes found in range {0} - {1}: {2}'.format(start, next, len(detected)))
         print(detected.to_string())
         # found = papers[(papers['forecast'] == 'Earthquake') & (papers['content'].str.contains("magnitudo", na=False, case=False))]  # query on magnitudo
         # y.append(len(found))
