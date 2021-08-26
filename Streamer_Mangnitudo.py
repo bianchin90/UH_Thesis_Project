@@ -177,13 +177,14 @@ def process_data() :
             # new_v = Sort(vector[0])
             new_v = sorted(vector[0], key=lambda x: x[1], reverse=True)
             if new_v[0][0] == 3:
-                print(' Earthquake detected')
+                #print(' Earthquake detected')
                 forecast.append('Earthquake')
             else:
                 forecast.append('Other')
 
         # select only tweets marked as earthquake
         papers['forecast'] = forecast
+
         detected = papers[(papers['forecast'] == 'Earthquake')] #query on magnitudo  & (papers['content'].str.contains("magnitudo", na=False, case=False))
 
         logger.info(' Earthquake tweets detected: {0}'.format(len(detected)))
@@ -243,6 +244,10 @@ def process_data() :
         x.append(start)
         # y.append(len(n_detection))
         y.append(forecast.count('Earthquake'))
+        print(' Earthquakes found in range {0} - {1}: {2}'.format(start, next, forecast.count('Earthquake')))
+        print(detected.to_string())
+        # found = papers[(papers['forecast'] == 'Earthquake') & (papers['content'].str.contains("magnitudo", na=False, case=False))]  # query on magnitudo
+        # y.append(len(found))
 
         # set next time window
         start = next

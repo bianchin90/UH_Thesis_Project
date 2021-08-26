@@ -112,8 +112,14 @@ app.layout = html.Div([
         n_intervals=0
     ),
 
-    html.H4("App Name", className="card-title",
-            style={'font-size': 64, 'text-align': 'center', 'color': app_settings['div_text']}),
+    html.Div(children=[
+        html.Br(),
+        html.H4("Heimdallr", className="card-title",
+                style={'font-size': 64, 'text-align': 'center', 'color': app_settings['div_text']}),
+        #html.Br()
+    ], style={'backgroundColor' : '#00b300'}),
+    # html.H4("App Name", className="card-title",
+    #         style={'font-size': 64, 'text-align': 'center', 'color': app_settings['div_text']}),
 
     html.Br(),
     html.Br(),
@@ -152,7 +158,7 @@ app.layout = html.Div([
                       #        # , 'width':'180vh'
                       #        },
                       #animate=True disable it to pop up automatically markers
-                      )),
+                      ) ),
         dbc.Col(
             [html.Div('Cities impacted', style={'color': app_settings['div_text'], 'fontSize': 50}),
              html.Br(),
@@ -171,16 +177,17 @@ app.layout = html.Div([
                  #        } for c in (['City', 'Tweets'])
                  #    ],
                  style_header={
-                     'backgroundColor': '#262626',
+                     'backgroundColor': '#00b300', #262626
                      'fontWeight': 'bold',
                      'color': 'white'
                  },
-                 style_data_conditional=[
-                     {
-                         'if': {'row_index': 'odd'},
-                         'backgroundColor': '#808080', # old one rgb(141, 239, 242)
-
-                     }],
+                 #style_data = {'backgroundColor': '#99e600'},
+                 # style_data_conditional=[
+                 #     {
+                 #         'if': {'row_index': 'odd'},
+                 #         'backgroundColor': '#99e600', # old one #808080
+                 #
+                 #     }],
                  # fixed_rows={'headers': True},
                  # style_table={'height': '80'}
                  style_table={'height': '80vh', 'overflowY': 'auto'},
@@ -242,7 +249,7 @@ def update_map(n):
         mode='markers',
         # marker={'color': df_sub['city'], 'size': 10}, gives error
         #marker={'color': df_sub['tweets'], 'size': 10},
-        marker={'color': 'yellow', 'size':10},
+        marker={'color': 'green', 'size':10},
         # unselected={'marker' : {'opacity':0, 'color' : 'black'}},
         # selected={'marker': {'size': 5}},
         hoverinfo='text',
@@ -263,7 +270,8 @@ def update_map(n):
             mapbox=dict(
                 accesstoken=mapbox_access_token,
                 bearing=0,  # orientation
-                style='dark',
+                style='outdoors', # options available "basic", "streets", "outdoors", "light", "dark", "satellite", or "satellite-streets" need access token
+                                           # "open-street-map", "carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner" or "stamen-watercolor" no token
                 center=dict(
                     lat=42.44208797622657,
                     lon=12.966702481337714
@@ -272,7 +280,8 @@ def update_map(n):
                 pitch=0,  # incidence angle
                 zoom=5
             ),
-            paper_bgcolor=app_settings['background_color']
+            paper_bgcolor=app_settings['background_color'],
+
         )
     }
 
