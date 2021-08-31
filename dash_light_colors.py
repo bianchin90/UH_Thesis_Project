@@ -114,7 +114,7 @@ app.layout = html.Div([
 
     html.Div(children=[
         html.Br(),
-        html.H4("Heimdallr", className="card-title",
+        html.H4("Argo", className="card-title",
                 style={'font-size': 64, 'text-align': 'center', 'color': app_settings['div_text']}),
         #html.Br()
     ], style={'backgroundColor' : '#00b300'}),
@@ -472,3 +472,7 @@ def update_pie(n):
 
 if __name__ == '__main__':
     app.run_server(debug=False, dev_tools_hot_reload=True)
+
+
+# modal popup
+# https://community.plotly.com/t/any-way-to-create-an-instructions-popout/18828/2

@@ -29,13 +29,41 @@ nlp = spacy.load("it_core_news_sm")
 def find_city(cities_df, tweets):
     istat = cities_df
     # create empty df to host matching records
-    geo_df = pd.DataFrame(columns=['city', 'lat', 'lon', 'tweets'])
+    # geo_df = pd.DataFrame(columns=['city', 'lat', 'lon', 'tweets'])
+    geo_df = pd.DataFrame(columns=['city', 'lat', 'lon', 'tweets', 'magnitudo'])
+
+    magnitude_abbr = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M9',
+                      'ML1', 'ML2', 'ML3', 'ML4', 'ML5', 'ML6', 'ML7', 'ML8', 'ML9']
 
     for tweet in tweets:
     # for index, row in raw.iterrows():
         # doc = nlp(row['content'])
         # print(row['content'])
         tweet = tweet.replace('\\n', ' ').replace('\\u2019', "'")
+        magnitudo = 'unknown'
+        #test with magnitudo
+        for abbr in magnitude_abbr:
+            if abbr in tweet:
+                # print('found')
+                # print(tweet)
+                tweet = tweet.replace(abbr, 'magnitudo {0}'.format(abbr[-1]))
+                # print(tweet)
+                # input('press any key to continue: ')
+        mag_list = ['magnitudo', 'magnitudine']
+        for elem in mag_list:
+            if elem in tweet.lower() :
+                try:
+                    magnitudo = tweet.split(elem)[1].split(' ')[1]
+                    if len(magnitudo) > 1:
+                        magnitudo = magnitudo[0] + '.' + magnitudo[1]
+                except:
+                    magnitudo = 'unknown'
+        if not magnitudo.replace('.', '').isnumeric():
+            magnitudo = 'unknown'
+        # elif 'magnitudine' in tweet.lower() :
+        #     magnitudo = tweet.split('magnitudine')[1].split(' ')[1]
+        #     if len(magnitudo) > 1:
+        #         magnitudo = magnitudo[0] + '.' + magnitudo[1]
         doc = nlp(tweet)
         print(tweet)
         print(doc.ents)
@@ -60,7 +88,10 @@ def find_city(cities_df, tweets):
             #invoke geonominatim for coordinates
             for idx, city in match.iterrows():
                 geolocator = Nominatim(user_agent="Earthquake_Detector")
-                location = geolocator.geocode(city['city'])
+                try:
+                    location = geolocator.geocode(city['city'])
+                except:
+                    location = None
                 if location is not None:
                     if 'italia' in location.address.lower():
                         city = location.address.split(',')[0]
@@ -70,13 +101,44 @@ def find_city(cities_df, tweets):
                             # tweet_counter = geo_df.query('city=={0}'.format(city))['tweets'] +1
                             mask = (geo_df['city'] == city)
                             geo_df['tweets'][mask] += 1
-                        else:
-                            geo_df.loc[len(geo_df)] = [city, location.latitude, location.longitude, tweet_counter]
+                            geo_df['magnitudo'][mask] = magnitudo
 
-                    print('geocoded place: {0}, {1}, {2}'.format(location, location.latitude, location.longitude))
-        #x = input(' Press any key to continue')
-        #if x == 'stop':
-        #    break
-    #print(geo_df)
+                        else:
+                            geo_df.loc[len(geo_df)] = [city, location.latitude, location.longitude, tweet_counter, magnitudo]
+
+                    print('geocoded place: {0}, {1}, {2}, {3}'.format(location, location.latitude, location.longitude, magnitudo))
+        # if magnitudo != 'unknown':
+        #     print(geo_df)
+        #     print(magnitudo)
+        #     x = input(' Press any key to continue')
+        #     if x == 'stop':
+        #        break
+    print(geo_df)
     return geo_df
 # riparti da qui: https://techblog.smc.it/en/2020-12-11/nlp-ner
+
+
+# import recycle
+# print('reading df')
+# istat = pd.read_excel('Georeferencing/Elenco-comuni-italiani.xls')
+# istat = istat[['Denominazione (Italiana e straniera)',
+#                "Denominazione dell'Unità territoriale sovracomunale (valida a fini statistici)",
+#                'Denominazione Regione']]
+# istat = istat.rename(columns={'Denominazione (Italiana e straniera)': 'city',
+#                               "Denominazione dell'Unità territoriale sovracomunale (valida a fini statistici)": 'province',
+#                               'Denominazione Regione': 'region'})
+# istat['city'] = istat['city'].apply(lambda x: x.lower())
+#
+# raw = pd.read_excel('historical_data/historical_tweets_Test_Amatrice2.xlsx')
+# raw = raw.head(5000)
+# # raw = pd.read_excel('historical_data/historical_tweets_2016-09-01_2016-10-01.xlsx')
+# print('processing df')
+# for ix, ln in raw.iterrows():
+#     nowContent = recycle.remove_url(ln['content'])
+#     raw.at[ix, 'content'] = nowContent
+#
+# gf = find_city(cities_df=istat, tweets=raw['content'].tolist())
+#
+# print(gf.to_string())
+# gf.to_excel('Georeferencing/Georeferencing_Magnitudo.xlsx')
+

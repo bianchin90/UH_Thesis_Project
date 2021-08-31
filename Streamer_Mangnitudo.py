@@ -48,7 +48,7 @@ def process_data() :
     istat['city'] = istat['city'].apply(lambda x: x.lower())
 
     #declare output dataframe for geoprocessing
-    geo_df = pd.DataFrame(columns=['city', 'lat', 'lon', 'tweets'])
+    geo_df = pd.DataFrame(columns=['city', 'lat', 'lon', 'tweets', 'magnitudo'])
 
     # load model
     lda = gensim.models.LdaMulticore.load('final_model/final_model.model')
@@ -61,8 +61,8 @@ def process_data() :
 
     # Read data into papers
     logger.info(' Reading DF..')
-    # raw = pd.read_excel('historical_data/historical_tweets_2015-12-01_2016-01-01.xlsx')
-    raw = pd.read_excel('historical_data/historical_tweets_2016-09-01_2016-10-01.xlsx')
+    raw = pd.read_excel('historical_data/historical_tweets_Test_Amatrice2.xlsx')
+    # raw = pd.read_excel('historical_data/historical_tweets_2016-09-01_2016-10-01.xlsx')
     for ix, ln in raw.iterrows():
         nowContent = recycle.remove_url(ln['content'])
         raw.at[ix, 'content'] = nowContent
@@ -72,7 +72,7 @@ def process_data() :
     raw = raw.sort_values(by=['date'])
 
     # process in batches of 5 minutes
-    time_window = 60  # 12 hours: 720
+    time_window = 3  # 12 hours: 720
     raw['date'] = pd.to_datetime(raw['date'])
     # print(papers[['date', 'content']])
     last = raw.date.max()
@@ -185,21 +185,21 @@ def process_data() :
         # select only tweets marked as earthquake
         papers['forecast'] = forecast
 
-        detected = papers[(papers['forecast'] == 'Earthquake')] #query on magnitudo  & (papers['content'].str.contains("magnitudo", na=False, case=False))
+        # detected = papers[(papers['forecast'] == 'Earthquake')] #query on magnitudo  & (papers['content'].str.contains("magnitudo", na=False, case=False))
 
         #################START TEST
-        # original = pd.read_csv('Georeferencing/earthquake_synonyms.csv', sep=',')
-        #
-        # synonyms = original.term.tolist()
-        # matching = pd.DataFrame(columns=['content'])
-        #
-        # for elem in synonyms:
-        #     sel = papers[papers['content'].str.contains(elem, case=False)]
-        #     sel = sel[['content']]
-        #     matching = matching.append(sel)
-        # matching = matching.drop_duplicates()
-        # detected = papers.merge(matching, on='content')
-        # print(detected.to_string())
+        original = pd.read_csv('Georeferencing/earthquake_synonyms.csv', sep=',')
+
+        synonyms = original.term.tolist()
+        matching = pd.DataFrame(columns=['content'])
+
+        for elem in synonyms:
+            sel = papers[papers['content'].str.contains(elem, case=False)]
+            sel = sel[['content']]
+            matching = matching.append(sel)
+        matching = matching.drop_duplicates()
+        detected = papers.merge(matching, on='content')
+        print(detected.to_string())
         #################END TEST #questo pezzo qui non serve a nulla perchè annulla il lavoro dell'LDA. prova ad inserirlo nel geoprocesing cercando solo sisma/magnitudo/scossa
 
         logger.info(' Earthquake tweets detected: {0}'.format(len(detected)))
@@ -208,7 +208,7 @@ def process_data() :
         # print(b)
         if len(detected) > 0:
             print(detected.to_string())
-            print(b)
+            #print(b)
             # run sentiment analysis
             sentiment_eval = recycle.perform_sentiment_analysis(sentiment_dataset=sentiment, tweet_dataset=detected)
             print(' Sentiment analysis results')
@@ -252,15 +252,17 @@ def process_data() :
                         # tweet_counter = geo_df.query('city=={0}'.format(city))['tweets'] +1
                         mask = (geo_df['city'] == location['city'])
                         geo_df['tweets'][mask] += location['tweets']
+                        if geo_df['magnitudo'][mask] == 'unknown':
+                            geo_df['magnitudo'][mask] = location['magnitudo']
                     else:
-                        geo_df.loc[len(geo_df)] = [location['city'], location['lat'], location['lon'], 1]
+                        geo_df.loc[len(geo_df)] = [location['city'], location['lat'], location['lon'], 1, location['magnitudo']]
                 #end test
                 # geo_df = geo_df.append(geoProc)
                 geo_df.to_csv('Stream_Data/CitiesFound.csv', index=False)
 
         x.append(start)
-        # y.append(len(n_detection))
-        y.append(forecast.count('Earthquake'))
+        y.append(len(detected))
+        # y.append(forecast.count('Earthquake'))
         print(' Earthquakes found in range {0} - {1}: {2}'.format(start, next, len(detected)))
         print(detected.to_string())
         # found = papers[(papers['forecast'] == 'Earthquake') & (papers['content'].str.contains("magnitudo", na=False, case=False))]  # query on magnitudo
@@ -291,7 +293,7 @@ def process_data() :
 
         # end test
         print('counter: {0}'.format(counter))
-        input('press any key to continue')
+        # input('press any key to continue')
         #time.sleep(2)
 
         # if counter == 150:
