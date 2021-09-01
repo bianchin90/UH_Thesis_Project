@@ -29,10 +29,10 @@ with open('Profile.json') as profile:
 mapbox_access_token = config["Mapbox_Access_Token"]
 
 #df = pd.read_excel("Georeferencing/sample_output.xlsx")
-df = pd.read_csv("Stream_Data/CitiesFound.csv")
+df = pd.read_csv("Stream_Data/Backup/CitiesFound.csv")
 
 # emotions dataframe
-emotions = pd.read_csv("Stream_Data/SentimentResults.csv", sep=',')
+emotions = pd.read_csv("Stream_Data/Backup/SentimentResults.csv", sep=',')
 # emotions = pd.DataFrame({'Col1': ['fear', 'joy', 'anger', 'sadness'], 'Value': [100] * 4})
 # emotions['random'] = np.around(np.random.dirichlet
 #                                (np.ones(emotions.shape[0]), size=1)[0],
@@ -42,7 +42,7 @@ emotions = pd.read_csv("Stream_Data/SentimentResults.csv", sep=',')
 
 # function to get the dataframe updated
 def getData():
-    data = pd.read_csv("Stream_Data/CitiesFound.csv")
+    data = pd.read_csv("Stream_Data/Backup/CitiesFound.csv")
     df_table = data.sort_values(by='tweets', ascending=False)
     df_table = df_table[['city', 'tweets']]
     # if n > 0:
@@ -104,6 +104,8 @@ def b64_image(image_filename):
     with open(image_filename, 'rb') as f:
         image = f.read()
     return 'data:images/png;base64,' + base64.b64encode(image).decode('utf-8')
+
+
 
 app_settings = {'background_color' : '#404040', 'div_text' :'#cccccc'}
 
@@ -237,7 +239,7 @@ app.layout = html.Div([
 def update_map(n):
     # df_sub = df[(df['tweets'].isin(chosen_boro))]
     #df_sub = df
-    df_sub = pd.read_csv("Stream_Data/CitiesFound.csv")
+    df_sub = pd.read_csv("Stream_Data/Backup/CitiesFound.csv")
 
     print(df_sub)
     # if 'Bari' not in df_sub.values:
@@ -307,7 +309,7 @@ def update_line(n2):
     time = len(dff)
     #######testing
     try:
-        streamed = pd.read_csv('Stream_Data/Earthquakes_Detection.csv', sep=',')
+        streamed = pd.read_csv('Stream_Data/Backup/Earthquakes_Detection.csv', sep=',')
     except:
         streamed = pd.DataFrame(columns=['X', 'Y'])
     if len(streamed) > 0 :
@@ -379,7 +381,7 @@ def update_card(n):
               )
 def update_severity(n):
     #     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
-    severity = pd.read_csv('Stream_Data/Severity.csv', sep=',')
+    severity = pd.read_csv('Stream_Data/Backup/Severity.csv', sep=',')
     if len(severity) < 50 :
         newCard = return_card('Severity code', 'Unknown')
     else:
@@ -416,7 +418,7 @@ def update_city(n):
               )
 def update_sentiment(n):
     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
-    emotions = pd.read_csv("Stream_Data/SentimentResults.csv", sep=',')
+    emotions = pd.read_csv("Stream_Data/Backup/SentimentResults.csv", sep=',')
     sent = emotions['feelings'].value_counts(normalize=True) * 100
     real_sent = pd.DataFrame(sent)
     real_sent = real_sent.reset_index()
@@ -443,7 +445,7 @@ def update_pie(n):
     #                                decimals=1)
     # emotions['percentage'] = (emotions['Value'] * emotions['random']).astype(int)
 
-    emotions = pd.read_csv("Stream_Data/SentimentResults.csv", sep=',')
+    emotions = pd.read_csv("Stream_Data/Backup/SentimentResults.csv", sep=',')
     sent = emotions['feelings'].value_counts(normalize=True) * 100
 
     real_sent = pd.DataFrame(sent)

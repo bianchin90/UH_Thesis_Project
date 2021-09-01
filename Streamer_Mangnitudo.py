@@ -194,7 +194,7 @@ def process_data() :
         matching = pd.DataFrame(columns=['content'])
 
         for elem in synonyms:
-            sel = papers[papers['content'].str.contains(elem, case=False)]
+            sel = papers[papers['content'].str.contains(elem, case=False, na=False)]
             sel = sel[['content']]
             matching = matching.append(sel)
         matching = matching.drop_duplicates()
@@ -252,13 +252,15 @@ def process_data() :
                         # tweet_counter = geo_df.query('city=={0}'.format(city))['tweets'] +1
                         mask = (geo_df['city'] == location['city'])
                         geo_df['tweets'][mask] += location['tweets']
-                        if geo_df['magnitudo'][mask] == 'unknown':
+                        test_check = geo_df['magnitudo'][mask]
+                        if test_check.iloc[0] == 'unknown':
                             geo_df['magnitudo'][mask] = location['magnitudo']
                     else:
                         geo_df.loc[len(geo_df)] = [location['city'], location['lat'], location['lon'], 1, location['magnitudo']]
                 #end test
                 # geo_df = geo_df.append(geoProc)
                 geo_df.to_csv('Stream_Data/CitiesFound.csv', index=False)
+
 
         x.append(start)
         y.append(len(detected))
