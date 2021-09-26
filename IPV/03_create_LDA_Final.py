@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
     # Read data into papers
     logger.info(' Reading DF..')
-    papers = pd.read_excel('historical_data/historical_tweets_ML.xlsx')
+    papers = pd.read_excel('historical_data_IPR/historical_tweets_ML.xlsx')
     len_df = len(papers)
     #pepers = papers.sample(10)
 

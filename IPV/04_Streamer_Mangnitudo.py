@@ -38,7 +38,8 @@ pd.set_option('display.max_columns', None)
 def process_data() :
     tot_emo = []
     # define dataframe containing istat cities
-    istat = pd.read_excel('Georeferencing/Elenco-comuni-italiani.xls')
+    istat = pd.read_excel("C:/Users/filip/PycharmProjects/UH_Thesis_Project/Georeferencing/Elenco-comuni-italiani.xls")
+
     istat = istat[['Denominazione (Italiana e straniera)',
                    "Denominazione dell'Unità territoriale sovracomunale (valida a fini statistici)",
                    'Denominazione Regione']]
@@ -51,18 +52,19 @@ def process_data() :
     geo_df = pd.DataFrame(columns=['city', 'lat', 'lon', 'tweets', 'magnitudo'])
 
     # load model
-    lda = gensim.models.LdaMulticore.load('final_model/final_model.model')
+    lda = gensim.models.LdaMulticore.load('C:/Users/filip/PycharmProjects/UH_Thesis_Project/final_model/final_model.model')
 
     # read sentiment dataset
-    sentiment = pd.read_csv('SentimentData/Sentiment_words.csv', sep=';')
+    sentiment = pd.read_csv('C:/Users/filip/PycharmProjects/UH_Thesis_Project/SentimentData/Sentiment_words.csv', sep=';')
 
     # define emotion classifier
     emotion = EmotionClassifier()
+    #input('Press any key to proceed')
 
     # Read data into papers
     logger.info(' Reading DF..')
     # raw = pd.read_excel('historical_data/historical_tweets_Test_Amatrice2.xlsx')
-    raw = pd.read_excel('historical_data/historical_tweets_2016-09-01_2016-10-01.xlsx')
+    raw = pd.read_excel('C:/Users/filip/PycharmProjects/UH_Thesis_Project/historical_data/historical_tweets_2016-09-01_2016-10-01.xlsx')
     for ix, ln in raw.iterrows():
         nowContent = recycle.remove_url(ln['content'])
         raw.at[ix, 'content'] = nowContent
@@ -188,7 +190,7 @@ def process_data() :
         # detected = papers[(papers['forecast'] == 'Earthquake')] #query on magnitudo  & (papers['content'].str.contains("magnitudo", na=False, case=False))
 
         #################START TEST
-        original = pd.read_csv('Georeferencing/earthquake_synonyms.csv', sep=',')
+        original = pd.read_csv('C:/Users/filip/PycharmProjects/UH_Thesis_Project/Georeferencing/earthquake_synonyms.csv', sep=',')
 
         synonyms = original.term.tolist()
         matching = pd.DataFrame(columns=['content'])

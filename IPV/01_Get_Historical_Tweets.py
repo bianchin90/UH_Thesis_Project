@@ -27,8 +27,8 @@ pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns',10)
 
 #define start scraping date Earthquake at L'Aquila
-#start = add_months(datetime.datetime. strptime('2009-04-01', '%Y-%m-%d'), 0)
-start = add_months(datetime.datetime. strptime('2016-10-01', '%Y-%m-%d'), 0)
+start = add_months(datetime.datetime. strptime('2009-04-01', '%Y-%m-%d'), 0)
+#start = add_months(datetime.datetime. strptime('2016-10-01', '%Y-%m-%d'), 0)
 
 #define temporal limit (next month)
 today = datetime.date.today()
@@ -54,16 +54,16 @@ while start != datetime.date(current_year, current_month + 1, 1):
     df['date'] = df['date'].astype(str)
 
     directory = os.path.abspath(os.getcwd())
-    new_path = os.path.join(directory, "historical_data")
+    new_path = os.path.join(directory, "historical_data_IPR")
 
     try:
         new_path = os.mkdir(new_path)
         logger.info(' Folder created')
     except FileExistsError:
         logger.info(' Folder Already Exists')
-        new_path = os.path.join(directory, "historical_data")
+        new_path = os.path.join(directory, "historical_data_IPR")
 
-    new_path = os.path.join(directory, "historical_data")
+    new_path = os.path.join(directory, "historical_data_IPR")
 
     logger.info('saving to excel')
     df = df.applymap(lambda x: x.encode('unicode_escape').decode('utf-8') if isinstance(x, str) else x)
