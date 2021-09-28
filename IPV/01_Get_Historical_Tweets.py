@@ -1,4 +1,4 @@
-#note, sntwitter does not work with python 3.9, I used version 3.8.6
+# note, sntwitter does not work with python 3.9, I used version 3.8.6
 from snscrape.modules import twitter as sntwitter
 import itertools
 import pandas as pd
@@ -6,46 +6,53 @@ import os
 import logging
 import datetime
 import calendar
+import datetime
 
+
+# define function to switch query to the next month
 def add_months(sourcedate, months):
     month = sourcedate.month - 1 + months
     year = sourcedate.year + month // 12
     month = month % 12 + 1
-    day = min(sourcedate.day, calendar.monthrange(year,month)[1])
+    day = min(sourcedate.day, calendar.monthrange(year, month)[1])
     return datetime.date(year, month, day)
 
-#set logger
+
+# set logger
 logging.basicConfig()
 logging.root.setLevel(logging.INFO)
 logger = logging.getLogger(' UH MSc [retrieve-historical-tweets]')
 logger.info(' modules imported correctly')
 
-desired_width=320
+logging.getLogger('snscrape').setLevel(logging.ERROR)
+
+desired_width = 320
 
 pd.set_option('display.width', desired_width)
-#np.set_printoption(linewidth=desired_width)
-pd.set_option('display.max_columns',10)
+pd.set_option('display.max_columns', 10)
 
-#define start scraping date Earthquake at L'Aquila
-start = add_months(datetime.datetime. strptime('2009-04-01', '%Y-%m-%d'), 0)
-#start = add_months(datetime.datetime. strptime('2016-10-01', '%Y-%m-%d'), 0)
+# define start scraping date Earthquake at L'Aquila
+start = add_months(datetime.datetime.strptime('2009-04-01', '%Y-%m-%d'), 0)
 
-#define temporal limit (next month)
+# define temporal limit (next month)
 today = datetime.date.today()
-current_month =today.month
+current_month = today.month
 current_year = today.year
 
 logger.info(' scraping started..')
 while start != datetime.date(current_year, current_month + 1, 1):
-    FROM  = start
+    time_zero = datetime.datetime.now()
+    FROM = start
     TO = add_months(start, 1)
     logger.info(' scraping from {0} to {1}'.format(FROM, TO))
-    #search = '"terremoto" "magnitudo" since:2016-08-24  until:2016-08-26 lang:it -filter:replies -filter:retweets'
+
+    # define query
     search = '"terremoto" since:{0}  until:{1} lang:it -filter:replies -filter:retweets'.format(FROM, TO)
-    #terremoto +lang:it +
+
+    # scrape tweets
     scraped_tweets = sntwitter.TwitterSearchScraper(search).get_items()
 
-    # slicing the generator 1234
+    # slice gathered tweets
     sliced_scraped_tweets = itertools.islice(scraped_tweets, None)
 
     # convert to a DataFrame
@@ -65,13 +72,14 @@ while start != datetime.date(current_year, current_month + 1, 1):
 
     new_path = os.path.join(directory, "historical_data_IPR")
 
-    logger.info('saving to excel')
+    logger.info(' saving to excel')
     df = df.applymap(lambda x: x.encode('unicode_escape').decode('utf-8') if isinstance(x, str) else x)
     df = df['content']
-    #now = str(dt.datetime.now()).replace(' ', 'T').split('.')[0].replace(':', '')
+
     df.to_excel(new_path + "/historical_tweets_{0}_{1}.xlsx".format(FROM, TO), sheet_name='Sheet_name_1')
+    tot_time = time_zero - datetime.datetime.now()
+    tot_min = tot_time.total_seconds() / 60
+    logger.info(' scraping for time window {0}-{1} completed. Processing time: {2} minutes'.format(FROM, TO, tot_min))
     start = TO
-
-
 
 logger.info('..process completed')
