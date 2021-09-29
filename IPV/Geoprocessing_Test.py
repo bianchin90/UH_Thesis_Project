@@ -65,8 +65,8 @@ def find_city(cities_df, tweets):
         #     if len(magnitudo) > 1:
         #         magnitudo = magnitudo[0] + '.' + magnitudo[1]
         doc = nlp(tweet)
-        print(tweet)
-        print(doc.ents)
+        #print(tweet)
+        #print(doc.ents)
         places = []
         for ent in doc.ents:
             print(ent.text, ent.start_char, ent.end_char, ent.label_)

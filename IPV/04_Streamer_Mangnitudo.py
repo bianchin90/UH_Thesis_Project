@@ -24,6 +24,9 @@ logging.root.setLevel(logging.INFO)
 logger = logging.getLogger(' UH MSc [Streamer]')
 logger.info(' modules imported correctly')
 
+logging.getLogger('gensim').setLevel(logging.ERROR)
+logging.getLogger('pandas').setLevel(logging.ERROR)
+
 #############CODE FROM STREAMER
 pd.set_option('display.max_columns', None)
 
@@ -74,13 +77,13 @@ def process_data() :
     raw = raw.sort_values(by=['date'])
 
     # process in batches of 5 minutes
-    time_window = 60  # 12 hours: 720
+    time_window = 30  # 12 hours: 720
     raw['date'] = pd.to_datetime(raw['date'])
     # print(papers[['date', 'content']])
     last = raw.date.max()
     start = raw.date.min()
     next = start + dt.timedelta(minutes=time_window)
-    print('{0}, {1}, {2}'.format(start, next, last))
+    #print('{0}, {1}, {2}'.format(start, next, last))
 
     # define array x and y to plot
     x = []  # here you add the count of earthquakes detected
@@ -92,9 +95,8 @@ def process_data() :
     # only for test
     counter = 0
     while start < last:
-        print('timeframe selected: from {0} to {1}'.format(start, next))
+        logger.info('timeframe selected: from {0} to {1}'.format(start, next))
         df = raw[(raw['date'] >= start) & (raw['date'] < next)]
-        print(len(df))
 
         # keep unnecessary columns
         papers = df[['content']]
@@ -201,7 +203,7 @@ def process_data() :
             matching = matching.append(sel)
         matching = matching.drop_duplicates()
         detected = papers.merge(matching, on='content')
-        print(detected.to_string())
+        #print(detected.to_string())
         #################END TEST #questo pezzo qui non serve a nulla perchè annulla il lavoro dell'LDA. prova ad inserirlo nel geoprocesing cercando solo sisma/magnitudo/scossa
 
         logger.info(' Earthquake tweets detected: {0}'.format(len(detected)))
@@ -209,31 +211,31 @@ def process_data() :
         # detected.to_csv('Stream_Data/Detected.csv', sep='|',index=False)
         # print(b)
         if len(detected) > 0:
-            print(detected.to_string())
+            #print(detected.to_string())
             #print(b)
             # run sentiment analysis
             sentiment_eval = recycle.perform_sentiment_analysis(sentiment_dataset=sentiment, tweet_dataset=detected)
-            print(' Sentiment analysis results')
+            #print(' Sentiment analysis results')
             # print(sentiment_eval['sentiment_value'].min())
             # print(sentiment_eval['sentiment_value'].max())
             #
             # print(sentiment_eval['sentiment_unprocessed'].min())
             # print(sentiment_eval['sentiment_unprocessed'].max())
-            print(sentiment_eval['sentiment_value'])
+            #print(sentiment_eval['sentiment_value'])
 
-            print(' computing emotions analysis..')
+            logger.info(' computing emotions analysis..')
             emotion_content = sentiment_eval['content']
             emo = emotion.predict(emotion_content.to_list())
             # my_emo = set(emo)
             sentiment_eval['emotions'] = emo
-            print(emo)
+            #print(emo)
             for i, r in sentiment_eval.iterrows():
                 tot_emo.append(r['sentiment_value'])
-            print(tot_emo)
-            if len(tot_emo) > 0:
-                print('sum: {0}'.format(sum(tot_emo)))
-                print('len: {0}'.format(len(tot_emo)))
-                print('avg: {0}'.format(sum(tot_emo)/len(tot_emo)))
+            #print(tot_emo)
+            # if len(tot_emo) > 0:
+            #     print('sum: {0}'.format(sum(tot_emo)))
+            #     print('len: {0}'.format(len(tot_emo)))
+            #     print('avg: {0}'.format(sum(tot_emo)/len(tot_emo)))
 
                 severity = pd.DataFrame(columns=['severity'], data=tot_emo)
                 #severity.at[0, 'severity'] = sum(tot_emo)/len(tot_emo)
@@ -267,8 +269,8 @@ def process_data() :
         x.append(start)
         y.append(len(detected))
         # y.append(forecast.count('Earthquake'))
-        print(' Earthquakes found in range {0} - {1}: {2}'.format(start, next, len(detected)))
-        print(detected.to_string())
+        logger.info(' Earthquakes found in range {0} - {1}: {2}'.format(start, next, len(detected)))
+        #print(detected.to_string())
         # found = papers[(papers['forecast'] == 'Earthquake') & (papers['content'].str.contains("magnitudo", na=False, case=False))]  # query on magnitudo
         # y.append(len(found))
 
@@ -296,7 +298,7 @@ def process_data() :
         feelings.to_csv('Stream_Data/SentimentResults.csv', index=False)
 
         # end test
-        print('counter: {0}'.format(counter))
+        #print('counter: {0}'.format(counter))
         # input('press any key to continue')
         #time.sleep(2)
 
@@ -304,7 +306,7 @@ def process_data() :
         #     print(tt)
         #     # print(my_labels)
         #     break
-    print('done')
+    logger.info(' Streaming completed')
 
 if __name__ == '__main__':
      process_data()
