@@ -29,6 +29,8 @@ logging.basicConfig()
 logging.root.setLevel(logging.INFO)
 logger = logging.getLogger(' UH MSc [Dashboard]')
 logger.info(' modules imported correctly')
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
+logging.getLogger('numexpr').setLevel(logging.ERROR)
 
 with open('Profile.json') as profile:
     config = json.load(profile)
@@ -311,6 +313,7 @@ dff = pd.DataFrame(columns=['X', 'Y'])
 @app.callback(Output('line-chart', 'figure'),
               Input('interval-component', 'n_intervals'))
 def update_line(n2):
+    logger.info(' Updating line graph..')
     time = len(dff)
     #######testing
     try:
@@ -361,6 +364,7 @@ def update_line(n2):
               # [State('count-table', 'data')]
               )
 def update_table(n):
+    logger.info(' Updating cities table..')
     return getData()
 
 # --------------------------------------------------------------
@@ -371,6 +375,7 @@ def update_table(n):
               # [State('count-table', 'data')]
               )
 def update_card(n):
+    logger.info(' Updating card of total N° of tweets detected..')
     #     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
     maxVal = dff['Y'].sum()
     newCard = return_card("Total N° of tweets detected", str(maxVal))
@@ -385,6 +390,7 @@ def update_card(n):
               # [State('count-table', 'data')]
               )
 def update_severity(n):
+    logger.info(' Updating card of severity code..')
     #     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
     severity = pd.read_csv('Stream_Data/Severity.csv', sep=',')
     if len(severity) < 50 :
@@ -422,6 +428,7 @@ def update_city(n):
               # [State('count-table', 'data')]
               )
 def update_sentiment(n):
+    logger.info(' Updating card of most widespread sentiment..')
     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
     emotions = pd.read_csv("Stream_Data/SentimentResults.csv", sep=',')
     sent = emotions['feelings'].value_counts(normalize=True) * 100
@@ -449,7 +456,7 @@ def update_pie(n):
     #                                (np.ones(emotions.shape[0]), size=1)[0],
     #                                decimals=1)
     # emotions['percentage'] = (emotions['Value'] * emotions['random']).astype(int)
-
+    logger.info(' Updating pie chart..')
     emotions = pd.read_csv("Stream_Data/SentimentResults.csv", sep=',')
     sent = emotions['feelings'].value_counts(normalize=True) * 100
 
@@ -484,7 +491,13 @@ def update_pie(n):
                             "font": {"color":"white"}, #legend
 
                             })
+    logger.info('-----------------------------------------------------------------------------------------------')
+    logger.info('-----------------------------------------------------------------------------------------------')
+
     return pie_chart
+
+
+
 
 
 if __name__ == '__main__':

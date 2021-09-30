@@ -63,7 +63,7 @@ def perform_sentiment_analysis(sentiment_dataset, tweet_dataset):
     tweets['sentiment_value'] = ''
     tweets['sentiment_unprocessed'] = '' #test to prove that lemmatization and text processing is useful
 
-    print(' Iterating tweets..')
+    #print(' Iterating tweets..')
 
     #iterate over tweets
     for index, row in tweets.iterrows():

@@ -10,6 +10,10 @@ logging.root.setLevel(logging.INFO)
 logger = logging.getLogger(' UH MSc [Geoprocessing]')
 logger.info(' modules imported correctly')
 
+logging.getLogger('pandas').setLevel(logging.ERROR)
+
+pd.options.mode.chained_assignment = None  # default='warn'
+
 nlp = spacy.load("it_core_news_sm")
 
 # running model on text and printing recognized entities
@@ -34,7 +38,7 @@ def find_city(cities_df, tweets):
 
     magnitude_abbr = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M9',
                       'ML1', 'ML2', 'ML3', 'ML4', 'ML5', 'ML6', 'ML7', 'ML8', 'ML9']
-
+    counter = 0
     for tweet in tweets:
     # for index, row in raw.iterrows():
         # doc = nlp(row['content'])
@@ -69,7 +73,7 @@ def find_city(cities_df, tweets):
         #print(doc.ents)
         places = []
         for ent in doc.ents:
-            print(ent.text, ent.start_char, ent.end_char, ent.label_)
+            # print(ent.text, ent.start_char, ent.end_char, ent.label_)
             # select only LOC
             if ent.label_ == 'LOC':
                 places.append(ent.text.lower())
@@ -83,7 +87,7 @@ def find_city(cities_df, tweets):
             match = istat[(istat["city"] == location)]
             # if location != 'italia':
             #     match = istat[(istat["city"] == location) | (istat["city"].str.contains(location))]
-            print(match)
+            #print(match)
 
             #invoke geonominatim for coordinates
             for idx, city in match.iterrows():
@@ -106,14 +110,15 @@ def find_city(cities_df, tweets):
                         else:
                             geo_df.loc[len(geo_df)] = [city, location.latitude, location.longitude, tweet_counter, magnitudo]
 
-                    print('geocoded place: {0}, {1}, {2}, {3}'.format(location, location.latitude, location.longitude, magnitudo))
+                    #logging.info('geocoded place in tweet n° {0}: {1} ({2}, {3}). Detected magnitude: {4}'.format(counter, city, location.latitude, location.longitude, magnitudo))
+                    counter += 1
         # if magnitudo != 'unknown':
         #     print(geo_df)
         #     print(magnitudo)
         #     x = input(' Press any key to continue')
         #     if x == 'stop':
         #        break
-    print(geo_df)
+    #print(geo_df)
     return geo_df
 # riparti da qui: https://techblog.smc.it/en/2020-12-11/nlp-ner
 

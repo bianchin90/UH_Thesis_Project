@@ -29,6 +29,7 @@ logging.getLogger('pandas').setLevel(logging.ERROR)
 
 #############CODE FROM STREAMER
 pd.set_option('display.max_columns', None)
+pd.options.mode.chained_assignment = None  # default='warn'
 
 
 # def Sort(sub_li):
@@ -36,6 +37,8 @@ pd.set_option('display.max_columns', None)
 #     sub_li.reverse()
 #     return sub_li
 
+def most_frequent(List):
+    return max(set(List), key = List.count)
 
 # if __name__ == '__main__':
 def process_data() :
@@ -77,7 +80,11 @@ def process_data() :
     raw = raw.sort_values(by=['date'])
 
     # process in batches of 5 minutes
-    time_window = 30  # 12 hours: 720
+    # time_window = 30  # 12 hours: 720
+    time_window = input(' Please express in minutes the desired time window: ')
+    while not time_window.isnumeric():
+        time_window = input(' Time window must be a numeric value: ')
+    time_window = int(time_window)
     raw['date'] = pd.to_datetime(raw['date'])
     # print(papers[['date', 'content']])
     last = raw.date.max()
@@ -95,14 +102,13 @@ def process_data() :
     # only for test
     counter = 0
     while start < last:
-        logger.info('timeframe selected: from {0} to {1}'.format(start, next))
+        logger.info(' timeframe selected: from {0} to {1}'.format(start, next))
         df = raw[(raw['date'] >= start) & (raw['date'] < next)]
 
         # keep unnecessary columns
         papers = df[['content']]
         papers['content'] = papers['content'].replace(',', ' ').replace('  ', ' ')
-        # Print out the first rows of papers
-        # papers.head()
+
 
         logger.info(' Processing textual attributes..')
         # Remove punctuation/lower casing
@@ -113,21 +119,6 @@ def process_data() :
             papers['content_processed'].map(lambda x: x.lower())
         # Print out the first rows of papers
         papers['content_processed'].head()
-
-        # Exploratory Analysis
-        # To verify whether the preprocessing, we’ll make a word cloud using the wordcloud package to get a visual representation of most common words.
-        # It is key to understanding the data and ensuring we are on the right track, and if any more preprocessing is necessary before training the model.
-
-        logger.info(' Generating WordCloud..')
-        # Join the different processed titles together.
-        long_string = ','.join(list(papers['content_processed'].values))
-        # Create a WordCloud object
-        wordcloud = WordCloud(background_color="white", max_words=5000, contour_width=3, contour_color='steelblue',
-                              width=800, height=400)
-        # Generate a word cloud
-        # wordcloud.generate(long_string)
-        # Visualize the word cloud
-        # wordcloud.to_image()
 
         # Prepare data for LDA Analysis
         # start by tokenizing the text and removing stopwords.
@@ -142,7 +133,6 @@ def process_data() :
         data_words = list(recycle.sent_to_words(data))
         # remove stop words
         data_words = recycle.remove_stopwords(data_words)
-        # logger.info(data_words[:1][0][:30])
 
         logger.info(' Building Bi- and Tri- grams..')
         # Build the bigram and trigram models
@@ -175,13 +165,11 @@ def process_data() :
         # feed
         # declare list containing predictions
         forecast = []
-        logger.info('printing LDA predictions.. ')
+        logger.info(' Printing LDA predictions.. ')
         for body in corpus:
             vector = lda[body]
-            # new_v = Sort(vector[0])
             new_v = sorted(vector[0], key=lambda x: x[1], reverse=True)
             if new_v[0][0] == 3:
-                #print(' Earthquake detected')
                 forecast.append('Earthquake')
             else:
                 forecast.append('Other')
@@ -189,7 +177,6 @@ def process_data() :
         # select only tweets marked as earthquake
         papers['forecast'] = forecast
 
-        # detected = papers[(papers['forecast'] == 'Earthquake')] #query on magnitudo  & (papers['content'].str.contains("magnitudo", na=False, case=False))
 
         #################START TEST
         original = pd.read_csv('C:/Users/filip/PycharmProjects/UH_Thesis_Project/Georeferencing/earthquake_synonyms.csv', sep=',')
@@ -206,37 +193,20 @@ def process_data() :
         #print(detected.to_string())
         #################END TEST #questo pezzo qui non serve a nulla perchè annulla il lavoro dell'LDA. prova ad inserirlo nel geoprocesing cercando solo sisma/magnitudo/scossa
 
-        logger.info(' Earthquake tweets detected: {0}'.format(len(detected)))
-        # print(detected)
-        # detected.to_csv('Stream_Data/Detected.csv', sep='|',index=False)
-        # print(b)
         if len(detected) > 0:
             #print(detected.to_string())
             #print(b)
             # run sentiment analysis
+            logger.info(' Starting sentiment analysis..')
             sentiment_eval = recycle.perform_sentiment_analysis(sentiment_dataset=sentiment, tweet_dataset=detected)
-            #print(' Sentiment analysis results')
-            # print(sentiment_eval['sentiment_value'].min())
-            # print(sentiment_eval['sentiment_value'].max())
-            #
-            # print(sentiment_eval['sentiment_unprocessed'].min())
-            # print(sentiment_eval['sentiment_unprocessed'].max())
-            #print(sentiment_eval['sentiment_value'])
 
-            logger.info(' computing emotions analysis..')
+            logger.info(' Computing emotions analysis..')
             emotion_content = sentiment_eval['content']
             emo = emotion.predict(emotion_content.to_list())
-            # my_emo = set(emo)
             sentiment_eval['emotions'] = emo
-            #print(emo)
+
             for i, r in sentiment_eval.iterrows():
                 tot_emo.append(r['sentiment_value'])
-            #print(tot_emo)
-            # if len(tot_emo) > 0:
-            #     print('sum: {0}'.format(sum(tot_emo)))
-            #     print('len: {0}'.format(len(tot_emo)))
-            #     print('avg: {0}'.format(sum(tot_emo)/len(tot_emo)))
-
                 severity = pd.DataFrame(columns=['severity'], data=tot_emo)
                 #severity.at[0, 'severity'] = sum(tot_emo)/len(tot_emo)
                 severity.to_csv('Stream_Data/Severity.csv', index=False)
@@ -268,24 +238,39 @@ def process_data() :
 
         x.append(start)
         y.append(len(detected))
-        # y.append(forecast.count('Earthquake'))
-        logger.info(' Earthquakes found in range {0} - {1}: {2}'.format(start, next, len(detected)))
-        #print(detected.to_string())
-        # found = papers[(papers['forecast'] == 'Earthquake') & (papers['content'].str.contains("magnitudo", na=False, case=False))]  # query on magnitudo
-        # y.append(len(found))
+
+        #return statistics for this iteration
+        logger.info('-----------------------------------------------------------------------------------------------')
+        logger.info(' Overall statistics for range {0} - {1}'.format(start, next))
+        logger.info(' Earthquake tweets found : {0}'.format(len(detected)))
+        if len(geoProc) > 0:
+#            logger.info('')
+            logger.info(' Cities detected:')
+            city_counter = 1
+            geoProc['tweets'] = geoProc['tweets'].fillna(1)
+            for ix, location in geoProc.iterrows():
+                logger.info('{0}) {1} ({2}, {3}). Magnitude: {4}. N° of tweets: {5}'.format(city_counter, location['city'], location['lat'], location['lon'], location['magnitudo'], location['tweets']))
+                city_counter += 1
+        else:
+#            logger.info('')
+            logger.info(' No cities detected in this range')
+#        logger.info('')
+        logger.info(' Most frequent emotion: {0}'.format(most_frequent(emo)))
+        avg_sent = sentiment_eval['sentiment_value'].mean()
+        if avg_sent < -0.8 :
+            color_code ='Red'
+        elif (avg_sent >= -0.8) and (avg_sent < -0.50) :
+            color_code = 'Orange'
+        elif avg_sent >= -0.5 :
+            color_code = 'Yellow'
+        logger.info(' Severity of tweets in this time window: {0}'.format(color_code))
+        logger.info('-----------------------------------------------------------------------------------------------')
+
 
         # set next time window
         start = next
         next = next + dt.timedelta(minutes=time_window)
         counter += 1
-        # keep only last n records for line plot (fresherst data)
-        # N = 15
-        # using list slicing
-        # Get last N elements from list
-        # if len(x) > N:
-        #     x = x[-N:]
-        #     y = y[-N:]
-        #     plt.clf()
         to_save = pd.DataFrame()
         to_save['X'] = x
         to_save['Y'] = y
@@ -299,13 +284,9 @@ def process_data() :
 
         # end test
         #print('counter: {0}'.format(counter))
-        # input('press any key to continue')
+        input('press any key to continue')
         #time.sleep(2)
 
-        # if counter == 150:
-        #     print(tt)
-        #     # print(my_labels)
-        #     break
     logger.info(' Streaming completed')
 
 if __name__ == '__main__':
