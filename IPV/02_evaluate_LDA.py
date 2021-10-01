@@ -24,7 +24,7 @@ from gensim.models import CoherenceModel
 import numpy as np
 import tqdm
 
-nltk.download('stopwords')
+#nltk.download('stopwords')
 from nltk.corpus import stopwords
 
 #set logger
@@ -33,9 +33,13 @@ logging.root.setLevel(logging.INFO)
 logger = logging.getLogger(' UH MSc [Evaluate-LDA]')
 logger.info(' modules imported correctly')
 
+logging.getLogger('nltk_data').setLevel(logging.ERROR)
+logging.getLogger('gensim').setLevel(logging.ERROR)
+logging.getLogger('gensim.similarities').setLevel(logging.ERROR)
+
 def download_lang(language):
     subprocess.check_call([sys.executable, "-m", "spacy", "download", language])
-download_lang('it')
+#download_lang('it')
 
 # supporting function
 def compute_coherence_values(corpus, dictionary, k, a, b):
@@ -73,8 +77,10 @@ def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
         texts_out.append([token.lemma_ for token in doc if token.pos_ in allowed_postags])
     return texts_out
 
+
 if __name__ == '__main__':
     # Read data into papers
+    logger.info('reading dataset..')
     papers = pd.read_excel('historical_data_IPR/historical_tweets_ML.xlsx')
 
     #SAMPLE ONLY FOR TESTING##################################################
@@ -87,6 +93,7 @@ if __name__ == '__main__':
 
 
     # Remove punctuation/lower casing
+    logger.info(' processing text..')
     papers['content_processed'] = \
     papers['content'].map(lambda x: re.sub('[,\\.!?]', '', str(x)))
     # Convert the titles to lowercase
@@ -102,12 +109,12 @@ if __name__ == '__main__':
 
     # Join the different processed titles together.
     long_string = ','.join(list(papers['content_processed'].values))
-    # Create a WordCloud object
-    wordcloud = WordCloud(background_color="white", max_words=5000, contour_width=3, contour_color='steelblue', width=800, height=400)
-    # Generate a word cloud
-    wordcloud.generate(long_string)
-    # Visualize the word cloud
-    wordcloud.to_image()
+    # # Create a WordCloud object
+    # wordcloud = WordCloud(background_color="white", max_words=5000, contour_width=3, contour_color='steelblue', width=800, height=400)
+    # # Generate a word cloud
+    # wordcloud.generate(long_string)
+    # # Visualize the word cloud
+    # wordcloud.to_image()
 
     #Prepare data for LDA Analysis
     #start by tokenizing the text and removing stopwords.
@@ -141,7 +148,7 @@ if __name__ == '__main__':
     nlp = spacy.load("it_core_news_sm", disable=['parser', 'ner'])
     # Do lemmatization keeping only noun, adj, vb, adv
     data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
-    print(data_lemmatized[:1])
+    #print(data_lemmatized[:1])
 
     # Create Dictionary
     id2word = corpora.Dictionary(data_lemmatized)
@@ -150,7 +157,7 @@ if __name__ == '__main__':
     # Term Document Frequency
     corpus = [id2word.doc2bow(text) for text in texts]
     # View
-    print(corpus[:1])
+    # print(corpus[:1])
 
     # build Model
     # We have everything required to train the base LDA model. In addition to the corpus and dictionary, you need to provide the number of topics as well.
@@ -163,25 +170,25 @@ if __name__ == '__main__':
     # It is important to set the number of “passes” and “iterations” high enough.
 
     # Build LDA model
-    logger.info(' Building model..')
-    #lda_model = gensim.models.LdaMulticore(corpus=corpus,
+    # logger.info(' Building model..')
+    # lda_model = gensim.models.LdaMulticore(corpus=corpus,
     #                                       id2word=id2word,
     #                                       num_topics=10,
     #                                       random_state=100,
     #                                       chunksize=100,
     #                                       passes=10,  # remember to set it higher
-    #                                       per_word_topics=True)
+    #                                       per_word_topics=True)0
 
-    logger.info(' Printing keyword topics..')
-    # Print the Keyword in the 10 topics
-    #pprint(lda_model.print_topics())
-    #doc_lda = lda_model[corpus]
-
-    logger.info(' Computing coherence score..')
-    # Compute Coherence Score
-    #coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
-    #coherence_lda = coherence_model_lda.get_coherence()
-    #print('\nCoherence Score: ', coherence_lda)
+    # logger.info(' Printing keyword topics..')
+    # # Print the Keyword in the 10 topics
+    # pprint(lda_model.print_topics())
+    # #doc_lda = lda_model[corpus]
+    #
+    # logger.info(' Computing coherence score..')
+    # # Compute Coherence Score
+    # coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
+    # coherence_lda = coherence_model_lda.get_coherence()
+    # logger.info('\nCoherence Score: ', coherence_lda)
 
     #hyperparameter tuning
     #hyperparameters are the settings for a machine learning algorithm that are tuned by the data scientist before training.
@@ -248,5 +255,6 @@ if __name__ == '__main__':
                         model_results['Coherence'].append(cv)
 
                         pbar.update(1)
+                        input('press any key to continue')
         pd.DataFrame(model_results).to_csv('lda_tuning_results2.csv', index=False)
         pbar.close()
