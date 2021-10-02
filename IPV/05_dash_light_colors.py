@@ -260,7 +260,7 @@ def update_map(n):
     #     df_sub['tweets'][mask] += rd.choice(values)
     # print(n)
     for idx, row in df_sub.iterrows():
-        df_sub.at[idx, 'details'] =  'City: {0} <br>Tweets:{1} <br>Magnitude:{2}'.format(row['city'], row['tweets'], row['magnitudo'])
+        df_sub.at[idx, 'details'] =  'City: {0} <br>Tweets: {1} <br>Magnitude: {2}'.format(row['city'], row['tweets'], row['magnitudo'])
     # Create figure
     locations = [go.Scattermapbox(
         lon=df_sub['lon'],

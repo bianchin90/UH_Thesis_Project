@@ -79,7 +79,7 @@ while start != datetime.date(current_year, current_month + 1, 1):
     df.to_excel(new_path + "/historical_tweets_{0}_{1}.xlsx".format(FROM, TO), sheet_name='Sheet_name_1')
     tot_time = datetime.datetime.now() - time_zero
     tot_min = tot_time.total_seconds() / 60
-    logger.info(' scraping for time window {0}-{1} completed. Processing time: {2} minutes'.format(FROM, TO, tot_min))
+    logger.info(' scraping for time window {0}-{1} completed. Tweets found: {2}. Processing time: {3} minutes'.format(FROM, TO, len(df), tot_min))
     start = TO
 
 logger.info('..process completed')

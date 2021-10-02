@@ -48,17 +48,6 @@ def process_data(input_text):
     # Remove punctuation/lower casing
     text = re.sub('[,\\.!?]', '', str(text))
     text = text.lower()
-    # papers['content_processed'] = \
-    #     papers['content'].map(lambda x: re.sub('[,\\.!?]', '', str(x)))
-    # Convert the titles to lowercase
-    # papers['content_processed'] = \
-    #     papers['content_processed'].map(lambda x: x.lower())
-    # # Print out the first rows of papers
-    # papers['content_processed'].head()
-
-    # Prepare data for LDA Analysis
-    # start by tokenizing the text and removing stopwords.
-    # Next, we convert the tokenized object into a corpus and dictionary
 
     logger.info(' Preparing data for LDA Analysis..')
 
@@ -76,7 +65,6 @@ def process_data(input_text):
 
     #print(tokens_without_sw)
     data_words = tokens_without_sw
-
 
     logger.info(' Building Bi- and Tri- grams..')
     # Build the bigram and trigram models
@@ -127,10 +115,10 @@ def process_data(input_text):
             eq_counter += 1
         else:
             gg = 0
-    if eq_counter >= 1 :
-        logger.info(' the topic of this tweet might be about an earthquake ')
+    if eq_counter >= 2 :
+        logger.info(' The topic of this tweet might be about an earthquake ')
     else :
-        logger.info(' the topic of this tweet could not be detected')
+        logger.info(' The topic of this tweet could not be detected')
 
 
 if __name__ == '__main__':

@@ -249,7 +249,7 @@ def process_data() :
             city_counter = 1
             geoProc['tweets'] = geoProc['tweets'].fillna(1)
             for ix, location in geoProc.iterrows():
-                logger.info('{0}) {1} ({2}, {3}). Magnitude: {4}. N° of tweets: {5}'.format(city_counter, location['city'], location['lat'], location['lon'], location['magnitudo'], location['tweets']))
+                logger.info(' {0}) {1} ({2}, {3}). Magnitude: {4}. N° of tweets: {5}'.format(city_counter, location['city'], location['lat'], location['lon'], location['magnitudo'], location['tweets']))
                 city_counter += 1
         else:
 #            logger.info('')

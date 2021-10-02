@@ -26,6 +26,13 @@ logging.root.setLevel(logging.INFO)
 logger = logging.getLogger(' UH MSc [create-final-model]')
 logger.info(' modules imported correctly')
 
+logging.getLogger('gensim').setLevel(logging.ERROR)
+logging.getLogger('gensim.models.phrases').setLevel(logging.ERROR)
+logging.getLogger('gensim.models.ldamulticore').setLevel(logging.ERROR)
+logging.getLogger('gensim.utils').setLevel(logging.ERROR)
+logging.getLogger('gensim.corpora.dictionary').setLevel(logging.ERROR)
+logging.getLogger('nltk_data').setLevel(logging.ERROR)
+
 def sent_to_words(sentences):
     for sentence in sentences:
         # deacc=True removes punctuations
@@ -99,7 +106,6 @@ if __name__ == '__main__':
     data_words = list(sent_to_words(data))
     # remove stop words
     data_words = remove_stopwords(data_words)
-    logger.info(data_words[:1][0][:30])
 
     logger.info(' Building Bi- and Tri- grams..')
     # Build the bigram and trigram models
@@ -152,7 +158,7 @@ if __name__ == '__main__':
                                            num_topics=topics,
                                            random_state=100,
                                            chunksize=chunk,
-                                           passes=100,  # remember to set it higher
+                                           passes=100,  # equals to epochs in neural networks
                                            per_word_topics=True,
                                            alpha=alpha,
                                            eta=beta)
@@ -178,35 +184,35 @@ if __name__ == '__main__':
 
 
     # Visualize the topics
-    logger.info(' Visualizing topics..')
-    #pyLDAvis.enable_notebook() ONLY FOR NOTEBOOK
-#test
-    directory = os.path.abspath(os.getcwd())
-    LDAvis_data_filepath = os.path.join(directory, "historical_data")
-
-    try:
-        LDAvis_data_filepath = os.mkdir(LDAvis_data_filepath)
-        logger.info(' Folder created')
-    except FileExistsError:
-        logger.info(' Folder Already Exists')
-        LDAvis_data_filepath = os.path.join(directory, "LDAvis")
-
-    LDAvis_data_filepath = os.path.join(directory, "LDAvis")
+#     logger.info(' Visualizing topics..')
+#     #pyLDAvis.enable_notebook() ONLY FOR NOTEBOOK
+# #test
+#     directory = os.path.abspath(os.getcwd())
+#     LDAvis_data_filepath = os.path.join(directory, "historical_data")
+#
+#     try:
+#         LDAvis_data_filepath = os.mkdir(LDAvis_data_filepath)
+#         logger.info(' Folder created')
+#     except FileExistsError:
+#         logger.info(' Folder Already Exists')
+#         LDAvis_data_filepath = os.path.join(directory, "LDAvis")
+#
+#     LDAvis_data_filepath = os.path.join(directory, "LDAvis")
 #end test
 
 
     #LDAvis_data_filepath = os.path.join('ldavis_prepared_'+str(num_topics))
     # # this is a bit time consuming - make the if statement True
     # # if you want to execute visualization prep yourself
-    if 1 == 1:
-        LDAvis_prepared = gensimMod.prepare(lda_model, corpus, id2word)
-        with open(LDAvis_data_filepath, 'wb') as f:
-            pickle.dump(LDAvis_prepared, f)
-    # load the pre-prepared pyLDAvis data from disk
-    with open(LDAvis_data_filepath, 'rb') as f:
-        LDAvis_prepared = pickle.load(f)
-    pyLDAvis.save_html(LDAvis_prepared, 'ldavis_prepared_final.html')
+    # if 1 == 1:
+    #     LDAvis_prepared = gensimMod.prepare(lda_model, corpus, id2word)
+    #     with open(LDAvis_data_filepath, 'wb') as f:
+    #         pickle.dump(LDAvis_prepared, f)
+    # # load the pre-prepared pyLDAvis data from disk
+    # with open(LDAvis_data_filepath, 'rb') as f:
+    #     LDAvis_prepared = pickle.load(f)
+    # pyLDAvis.save_html(LDAvis_prepared, 'ldavis_prepared_final.html')
 
     #save model
-    lda_model.save('final_model.model')
+    # lda_model.save('final_model.model')
     logger.info(' process completed')
