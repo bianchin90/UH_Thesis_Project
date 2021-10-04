@@ -28,10 +28,6 @@ logger.info(' modules imported correctly')
 logging.getLogger('gensim').setLevel(logging.ERROR)
 logging.getLogger('pandas').setLevel(logging.ERROR)
 
-#############CODE FROM STREAMER
-pd.set_option('display.max_columns', None)
-pd.options.mode.chained_assignment = None  # default='warn'
-
 
 def most_frequent(List):
     return max(set(List), key=List.count)
@@ -42,7 +38,7 @@ def process_data(input_text):
     text = input_text
     # load model
     lda = gensim.models.LdaMulticore.load(
-        'C:/Users/filip/PycharmProjects/UH_Thesis_Project/final_model/final_model.model')
+        'final_model/final_model.model')
 
     logger.info(' Processing textual attributes..')
     # Remove punctuation/lower casing
@@ -67,44 +63,38 @@ def process_data(input_text):
     data_words = tokens_without_sw
 
     logger.info(' Building Bi- and Tri- grams..')
-    # Build the bigram and trigram models
-    # The two important arguments to Phrases are min_count and threshold.
-    # The higher the values of these param, the harder it is for words to be combined
+    # Build bigram  model
+    # The most relevant arguments are min_count and threshold.
+    # The higher their values, the more difficult it is to combine words
     bigram = gensim.models.Phrases(data_words, min_count=5, threshold=100)  # higher threshold fewer phrases.
-    trigram = gensim.models.Phrases(bigram[data_words], threshold=100)
     # Faster way to get a sentence clubbed as a trigram/bigram
     bigram_mod = gensim.models.phrases.Phraser(bigram)
-    trigram_mod = gensim.models.phrases.Phraser(trigram)
+
 
     logger.info(' Removing stopwords..')
     # Remove Stop Words
     data_words_nostops = recycle.remove_stopwords(data_words)
     # Form Bigrams
     data_words_bigrams = recycle.make_bigrams(bigram_mod, data_words_nostops)
-    # Initialize spacy 'en' model, keeping only tagger component (for efficiency)
+    # Initialize spacy italian model, keeping only tagger component (for efficiency)
     nlp = spacy.load("it_core_news_sm", disable=['parser', 'ner'])
-    # Do lemmatization keeping only noun, adj, vb, adv
-    data_lemmatized1 = recycle.lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
+    # Do lemmatization keeping only noun, adj, vb, adv and loc
+    data_lemmatized1 = recycle.lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV', 'LOC'])
     data_lemmatized = [x for x in data_lemmatized1 if x != []]
-    #print(data_lemmatized)
 
-
-    # logger.info(data_lemmatized[:1])
 
     # Create Dictionary
     id2word = corpora.Dictionary(data_lemmatized)
     # id2word = corpora.Dictionary(tokens_without_sw)
     # Create Corpus
     texts = data_lemmatized
-    # texts = tokens_without_sw
+
     # Term Document Frequency
     corpus = [id2word.doc2bow(text) for text in texts]
 
     # feed
     # declare list containing predictions
-    forecast = []
     logger.info(' Printing LDA predictions.. ')
-    #print(len(corpus))
     eq_counter = 0
     for body in corpus:
         vector = lda[body]
@@ -128,3 +118,4 @@ if __name__ == '__main__':
         process_data(test)
         time.sleep(2)
         test = input('Please post another tweet: ')
+    logging.info(' Thanks for testing. bye bye')

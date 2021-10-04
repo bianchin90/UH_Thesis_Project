@@ -184,34 +184,34 @@ if __name__ == '__main__':
 
 
     # Visualize the topics
-#     logger.info(' Visualizing topics..')
-#     #pyLDAvis.enable_notebook() ONLY FOR NOTEBOOK
-# #test
-#     directory = os.path.abspath(os.getcwd())
-#     LDAvis_data_filepath = os.path.join(directory, "historical_data")
-#
-#     try:
-#         LDAvis_data_filepath = os.mkdir(LDAvis_data_filepath)
-#         logger.info(' Folder created')
-#     except FileExistsError:
-#         logger.info(' Folder Already Exists')
-#         LDAvis_data_filepath = os.path.join(directory, "LDAvis")
-#
-#     LDAvis_data_filepath = os.path.join(directory, "LDAvis")
+    logger.info(' Visualizing topics..')
+    #pyLDAvis.enable_notebook() ONLY FOR NOTEBOOK
+#test
+    directory = os.path.abspath(os.getcwd())
+    LDAvis_data_filepath = os.path.join(directory, "historical_data")
+
+    try:
+        LDAvis_data_filepath = os.mkdir(LDAvis_data_filepath)
+        logger.info(' Folder created')
+    except FileExistsError:
+        logger.info(' Folder Already Exists')
+        LDAvis_data_filepath = os.path.join(directory, "LDAvis")
+
+    LDAvis_data_filepath = os.path.join(directory, "LDAvis")
 #end test
 
 
     #LDAvis_data_filepath = os.path.join('ldavis_prepared_'+str(num_topics))
-    # # this is a bit time consuming - make the if statement True
-    # # if you want to execute visualization prep yourself
-    # if 1 == 1:
-    #     LDAvis_prepared = gensimMod.prepare(lda_model, corpus, id2word)
-    #     with open(LDAvis_data_filepath, 'wb') as f:
-    #         pickle.dump(LDAvis_prepared, f)
-    # # load the pre-prepared pyLDAvis data from disk
-    # with open(LDAvis_data_filepath, 'rb') as f:
-    #     LDAvis_prepared = pickle.load(f)
-    # pyLDAvis.save_html(LDAvis_prepared, 'ldavis_prepared_final.html')
+    # this is a bit time consuming - make the if statement True
+    # if you want to execute visualization prep yourself
+    if 1 == 1:
+        LDAvis_prepared = gensimMod.prepare(lda_model, corpus, id2word)
+        with open(LDAvis_data_filepath, 'wb') as f:
+            pickle.dump(LDAvis_prepared, f)
+    # load the pre-prepared pyLDAvis data from disk
+    with open(LDAvis_data_filepath, 'rb') as f:
+        LDAvis_prepared = pickle.load(f)
+    pyLDAvis.save_html(LDAvis_prepared, 'ldavis_prepared_final.html')
 
     #save model
     # lda_model.save('final_model.model')
