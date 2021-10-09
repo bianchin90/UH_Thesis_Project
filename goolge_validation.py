@@ -34,8 +34,24 @@ def normalize_tweets(input_df):
     df = df[df['tweets_norm'].notna()]
     return df
 
-if __name__ == '__main__':
-    df = pd.read_csv('Stream_Data/CitiesFound.csv')
-    df = normalize_tweets(df)
-    print(df.to_string())
+def find_burst():
+    streamed = pd.read_csv('IPV/Stream_Data/Earthquakes_Detection.csv', sep=',')
+    #temp = pd.DataFrame(columns=['Z'], data=streamed['Y'])
+    streamed = streamed.sort_values(by=['X'])
+    temp = streamed['Y']
+    temp = temp.pct_change()
+    streamed['shift'] = temp
+    streamed = streamed[streamed['shift'] >= 0.05 ]
+    if len(streamed) > 0:
+        sel = streamed.tail(1)
+        burst = sel['X'].iloc[-1]
+        burst = 'last burst detected {0}'.format(burst.split('+')[0])
+    else:
+        burst = 'No bursts detected so far'
+    return burst
 
+if __name__ == '__main__':
+
+    #print(burst)
+    burst = find_burst()
+    print(burst)

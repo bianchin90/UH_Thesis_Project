@@ -172,6 +172,15 @@ app.layout = html.Div([
             className="mb-4", style={"margin-left":"2vh", "margin-right":"2vh"}),
     ]),
 
+    dbc.Row([  # card,
+        dbc.Col(),
+        dbc.Col(dbc.CardGroup(
+            [dbc.Card(return_card('last burst detected', 'unknown'), inverse=True, id='card-burst'),
+             setCardIcon('fa fa-chart-line', 'primary')], className="mt-4 shadow", )),
+        dbc.Col()
+    ],
+        className="mb-4", style={"margin-left": "2vh", "margin-right": "2vh"}, justify="center",),
+
     html.Br(),
 
     dbc.Row(children=[
