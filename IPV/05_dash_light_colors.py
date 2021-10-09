@@ -72,6 +72,29 @@ def getData():
     return data
 
 
+def find_burst():
+    streamed = pd.read_csv('Stream_Data/Earthquakes_Detection.csv', sep=',')
+    #temp = pd.DataFrame(columns=['Z'], data=streamed['Y'])
+    streamed = streamed.sort_values(by=['X'])
+    temp = streamed['Y'].astype(int)
+    #temp +=1
+    #streamed['old'] = temp
+    temp = temp.pct_change()
+    streamed['shift'] = temp
+    streamed['shift'] = streamed['shift'].fillna(0)
+    for idx, row in streamed.iterrows():
+        if row['shift'] == np.inf:
+            streamed.at[idx, 'shift'] = row['Y']
+    streamed = streamed[streamed['shift'] >= 0.05 ]
+    if len(streamed) > 0:
+        sel = streamed.tail(1)
+        burst = sel['X'].iloc[-1]
+        burst = '{0}'.format(burst.split('+')[0])
+    else:
+        burst = 'No bursts detected so far'
+    return burst
+
+
 ############
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 FONT_AWESOME = "https://use.fontawesome.com/releases/v5.10.2/css/all.css"
@@ -450,6 +473,19 @@ def update_sentiment(n):
 
 
 # --------------------------------------------------------------
+# update burst card
+@app.callback(Output('card-burst', 'children'),
+              Input('interval-component', 'n_intervals')
+              # ,
+              # [State('count-table', 'data')]
+              )
+def update_city(n):
+    #     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
+    burst = find_burst()
+    newCard = return_card("Last burst detected", burst)
+    return newCard
+
+
 
 # --------------------------------------------------------------
 # update pie chart

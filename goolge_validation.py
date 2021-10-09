@@ -1,5 +1,6 @@
 import pandas
 import pandas as pd
+import numpy as np
 
 
 def prepare_data():
@@ -38,9 +39,15 @@ def find_burst():
     streamed = pd.read_csv('IPV/Stream_Data/Earthquakes_Detection.csv', sep=',')
     #temp = pd.DataFrame(columns=['Z'], data=streamed['Y'])
     streamed = streamed.sort_values(by=['X'])
-    temp = streamed['Y']
+    temp = streamed['Y'].astype(int)
+    #temp +=1
+    #streamed['old'] = temp
     temp = temp.pct_change()
     streamed['shift'] = temp
+    streamed['shift'] = streamed['shift'].fillna(0)
+    for idx, row in streamed.iterrows():
+        if row['shift'] == np.inf:
+            streamed.at[idx, 'shift'] = row['Y']
     streamed = streamed[streamed['shift'] >= 0.05 ]
     if len(streamed) > 0:
         sel = streamed.tail(1)
