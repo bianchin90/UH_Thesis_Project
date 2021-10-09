@@ -55,7 +55,7 @@ def process_data() :
     istat['city'] = istat['city'].apply(lambda x: x.lower())
 
     #declare output dataframe for geoprocessing
-    geo_df = pd.DataFrame(columns=['city', 'lat', 'lon', 'tweets', 'magnitudo'])
+    geo_df = pd.DataFrame(columns=['city', 'lat', 'lon', 'tweets', 'magnitudo', 'total', 'tweets_norm'])
 
     # load model
     lda = gensim.models.LdaMulticore.load('C:/Users/filip/PycharmProjects/UH_Thesis_Project/final_model/final_model.model')
@@ -69,8 +69,8 @@ def process_data() :
 
     # Read data into papers
     logger.info(' Reading DF..')
-    # raw = pd.read_excel('historical_data/historical_tweets_Test_Amatrice2.xlsx')
-    raw = pd.read_excel('C:/Users/filip/PycharmProjects/UH_Thesis_Project/historical_data/historical_tweets_2016-09-01_2016-10-01.xlsx')
+    raw = pd.read_excel('C:/Users/filip/PycharmProjects/UH_Thesis_Project/historical_data/historical_tweets_Test_Amatrice2.xlsx')
+    # raw = pd.read_excel('C:/Users/filip/PycharmProjects/UH_Thesis_Project/historical_data/historical_tweets_2016-09-01_2016-10-01.xlsx')
     for ix, ln in raw.iterrows():
         nowContent = recycle.remove_url(ln['content'])
         raw.at[ix, 'content'] = nowContent
@@ -218,6 +218,7 @@ def process_data() :
             feelings = feelings.append(pd.DataFrame(extra))
 
             #run geoprocessing
+            logger.info(' Start geoprocessing tweets..')
             geoProc = Geoprocessing.find_city(cities_df=istat, tweets=detected['content'].tolist())
             if len(geoProc) > 0:
                 #test
@@ -230,9 +231,27 @@ def process_data() :
                         if test_check.iloc[0] == 'unknown':
                             geo_df['magnitudo'][mask] = location['magnitudo']
                     else:
-                        geo_df.loc[len(geo_df)] = [location['city'], location['lat'], location['lon'], 1, location['magnitudo']]
+                        # geo_df.loc[len(geo_df)] = [location['city'], location['lat'], location['lon'], 1, location['magnitudo'], '', '']
+                        new_entry = {'city':location['city'], 'lat': location['lat'], 'lon': location['lon'],
+                                     'tweets': 1, 'magnitudo': location['magnitudo'], 'total': '', 'tweets_norm': ''}
+                        geo_df = geo_df.append(new_entry, ignore_index="True")
                 #end test
                 # geo_df = geo_df.append(geoProc)
+                #geo_df = recycle.normalize_tweets(geo_df)
+                pop = pd.read_excel('popolazione_comuni_clean.xlsx')
+                geo_df = geo_df.merge(pop, left_on='city', right_on='city', how='left')
+                try:
+                    geo_df.drop('totale_x', axis=1, inplace=True)
+                    geo_df = geo_df.rename(columns={'totale_y': 'totale'})
+                except:
+                    l = 0
+                geo_df['tweets_norm'] = (geo_df['tweets'] / geo_df['totale']) * 1000
+                geo_df = geo_df.sort_values(by='tweets_norm', ascending=False)
+                geo_df = geo_df[geo_df['tweets_norm'].notna()]
+                #normalize tweets
+
+
+                #end normalization
                 geo_df.to_csv('Stream_Data/CitiesFound.csv', index=False)
 
 
@@ -282,9 +301,7 @@ def process_data() :
         my_explode = (0, 0.1, 0, 0.1)
         feelings.to_csv('Stream_Data/SentimentResults.csv', index=False)
 
-        # end test
-        #print('counter: {0}'.format(counter))
-        input('press any key to continue')
+        # input('press any key to continue')
         #time.sleep(2)
 
     logger.info(' Streaming completed')
@@ -293,11 +310,3 @@ if __name__ == '__main__':
      process_data()
       #app.run_server(debug=False, dev_tools_hot_reload=True)
 
-#riparti da qui https://community.plotly.com/t/solved-updating-server-side-app-data-on-a-schedule/6612
-#devi capire come combinare il live streaming alla dashboard. prova ad eseguire i due processi in parallelo (magari con un ThreadPool).
-# il data streamer salva i progressi a db (excel)
-# le dash callback aggiornano i dati leggendo il db (excel aggiornato)
-
-
-#sentiment analysis. calcolo della severity, riparti da qui https://www.earthdatascience.org/courses/use-data-open-source-python/intro-to-apis/analyze-tweet-sentiment-in-python/
-# ci sta pure una funzione interessante per rimuovere gli url

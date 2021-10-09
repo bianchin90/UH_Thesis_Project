@@ -42,18 +42,25 @@ df = pd.read_csv("Stream_Data/CitiesFound.csv")
 
 # emotions dataframe
 emotions = pd.read_csv("Stream_Data/SentimentResults.csv", sep=',')
-# emotions = pd.DataFrame({'Col1': ['fear', 'joy', 'anger', 'sadness'], 'Value': [100] * 4})
-# emotions['random'] = np.around(np.random.dirichlet
-#                                (np.ones(emotions.shape[0]), size=1)[0],
-#                                decimals=1)
-# emotions['percentage'] = (emotions['Value'] * emotions['random']).astype(int)
 
 
 # function to get the dataframe updated
 def getData():
     data = pd.read_csv("Stream_Data/CitiesFound.csv")
-    df_table = data.sort_values(by='tweets', ascending=False)
-    df_table = df_table[['city', 'tweets']]
+    df_table = data.sort_values(by='tweets_norm', ascending=False)
+    df_table = df_table[['city', 'tweets_norm']]
+    df_table['tweets_norm'] = df_table['tweets_norm'].round(decimals = 3)
+
+    reg_list = ["Valle d'Aosta", "Piemonte", "Liguria", "Lombardia", "Trentino-Alto Adige",
+                "Veneto", "Friuli-Venezia Giulia", "Emilia Romagna", "Toscana", "Umbria",
+                "Marche", "Lazio", "Abruzzo", "Molise", "Campania", "Puglia", "Basilicata",
+                "Calabria", "Sicilia","Sardegna" ]
+    #remove regions
+    for region in reg_list:
+        indexNames = df_table[df_table['city'] == region].index
+        # Delete these row indexes from dataFrame
+        df_table.drop(indexNames, inplace=True)
+    # df_table = df_table.rename(columns={'tweets_norm': 'tweets per 1000 inhabitants'})
     # if n > 0:
     logger.info(' Retrieving geoprosessing results..')
     #print(df_table)
@@ -185,10 +192,10 @@ app.layout = html.Div([
                  id='count-table',
                  # columns=[{"name": i, "id": i} for i in df.columns],
                  columns=[{'name': 'City', 'id': 'city'},
-                          {'name': 'Tweets', 'id': 'tweets'}],
+                          {'name': 'Tweets per \n1000 inhabitants', 'id': 'tweets_norm'}],
                  # title='Cities impacted',
                  data=getData(),
-                 style_cell={'textAlign': 'left', 'font-family': 'sans-serif', 'border': '2px solid black'},
+                 style_cell={'textAlign': 'left', 'font-family': 'sans-serif', 'border': '2px solid black', 'whiteSpace': 'pre-line'},
                  # style_cell_conditional=[
                  #        {
                  #            'if': {'column_id': 'city'},
@@ -249,18 +256,9 @@ def update_map(n):
     df_sub = pd.read_csv("Stream_Data/CitiesFound.csv")
 
     logger.info(' Updating map..')
-    # if 'Bari' not in df_sub.values:
-    #     print('adding new city')
-    #     df_sub.loc[len(df_sub)] = ['Bari', '41.11336132309502', '16.860921999063116', 2]
-    # else:
-    #     print('Detected new tweet in existing city')
-    #     values = [0, 1, 2, 3]
-    #     cities = df_sub.city.unique()
-    #     mask = (df_sub['city'] == rd.choice(cities))
-    #     df_sub['tweets'][mask] += rd.choice(values)
-    # print(n)
+
     for idx, row in df_sub.iterrows():
-        df_sub.at[idx, 'details'] =  'City: {0} <br>Tweets: {1} <br>Magnitude: {2}'.format(row['city'], row['tweets'], row['magnitudo'])
+        df_sub.at[idx, 'details'] =  'City: {0} <br>Tweets per 1000 inhabitants: {1} <br>Magnitude: {2}'.format(row['city'], row['tweets_norm'], row['magnitudo'])
     # Create figure
     locations = [go.Scattermapbox(
         lon=df_sub['lon'],
