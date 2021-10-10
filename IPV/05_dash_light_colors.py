@@ -24,7 +24,7 @@ import plotly.express as px
 import dash_table
 import dash_bootstrap_components as dbc
 
-#set logger
+# set logger
 logging.basicConfig()
 logging.root.setLevel(logging.INFO)
 logger = logging.getLogger(' UH MSc [Dashboard]')
@@ -37,7 +37,7 @@ with open('Profile.json') as profile:
 
 mapbox_access_token = config["Mapbox_Access_Token"]
 
-#df = pd.read_excel("Georeferencing/sample_output.xlsx")
+# df = pd.read_excel("Georeferencing/sample_output.xlsx")
 df = pd.read_csv("Stream_Data/CitiesFound.csv")
 
 # emotions dataframe
@@ -49,13 +49,13 @@ def getData():
     data = pd.read_csv("Stream_Data/CitiesFound.csv")
     df_table = data.sort_values(by='tweets_norm', ascending=False)
     df_table = df_table[['city', 'tweets_norm']]
-    df_table['tweets_norm'] = df_table['tweets_norm'].round(decimals = 3)
+    df_table['tweets_norm'] = df_table['tweets_norm'].round(decimals=3)
 
     reg_list = ["Valle d'Aosta", "Piemonte", "Liguria", "Lombardia", "Trentino-Alto Adige",
                 "Veneto", "Friuli-Venezia Giulia", "Emilia Romagna", "Toscana", "Umbria",
                 "Marche", "Lazio", "Abruzzo", "Molise", "Campania", "Puglia", "Basilicata",
-                "Calabria", "Sicilia","Sardegna" ]
-    #remove regions
+                "Calabria", "Sicilia", "Sardegna"]
+    # remove regions
     for region in reg_list:
         indexNames = df_table[df_table['city'] == region].index
         # Delete these row indexes from dataFrame
@@ -63,29 +63,29 @@ def getData():
     # df_table = df_table.rename(columns={'tweets_norm': 'tweets per 1000 inhabitants'})
     # if n > 0:
     logger.info(' Retrieving geoprosessing results..')
-    #print(df_table)
+    # print(df_table)
     try:
         data = df_table.to_dict('records')
     except:
         data = df_table
-    #print(data)
+    # print(data)
     return data
 
 
 def find_burst():
     streamed = pd.read_csv('Stream_Data/Earthquakes_Detection.csv', sep=',')
-    #temp = pd.DataFrame(columns=['Z'], data=streamed['Y'])
+    # temp = pd.DataFrame(columns=['Z'], data=streamed['Y'])
     streamed = streamed.sort_values(by=['X'])
     temp = streamed['Y'].astype(int)
-    #temp +=1
-    #streamed['old'] = temp
+    # temp +=1
+    # streamed['old'] = temp
     temp = temp.pct_change()
     streamed['shift'] = temp
     streamed['shift'] = streamed['shift'].fillna(0)
     for idx, row in streamed.iterrows():
         if row['shift'] == np.inf:
             streamed.at[idx, 'shift'] = row['Y']
-    streamed = streamed[streamed['shift'] >= 0.05 ]
+    streamed = streamed[streamed['shift'] >= 0.05]
     if len(streamed) > 0:
         sel = streamed.tail(1)
         burst = sel['X'].iloc[-1]
@@ -93,6 +93,61 @@ def find_burst():
     else:
         burst = 'No bursts detected so far'
     return burst
+
+
+def create_locations(marker_color):
+    df_sub = pd.read_csv("Stream_Data/CitiesFound.csv")
+    logger.info(' Updating map..')
+    df_sub['tweets_norm'] = df_sub['tweets_norm'].round(decimals=3)
+
+    for idx, row in df_sub.iterrows():
+        df_sub.at[idx, 'details'] = 'City: {0} <br>Tweets per 1000 inhabitants: {1} <br>Magnitude: {2}'.format(
+            row['city'], row['tweets_norm'], row['magnitudo'])
+    # Create figure
+    locations = [go.Scattermapbox(
+        lon=df_sub['lon'],
+        lat=df_sub['lat'],
+        mode='markers',
+        # marker={'color': df_sub['city'], 'size': 10}, gives error
+        # marker={'color': df_sub['tweets'], 'size': 10},
+        marker={'color': marker_color, 'size': 10},
+        # unselected={'marker' : {'opacity':0, 'color' : 'black'}},
+        # selected={'marker': {'size': 5}},
+        hoverinfo='text',
+        hovertext=df_sub['details'],
+        customdata=df_sub['city'],
+    )]
+    return locations
+
+
+def return_map(localities, style):
+    new_map = {
+        'data': localities,
+        'layout': go.Layout(
+            uirevision='foo',  # preserves state of figure/map after callback activated
+            # clickmode='event+select',
+            hovermode='closest',
+            hoverdistance=3,
+            title=dict(text="Where is the earthquake?", font=dict(size=50, color='#cccccc')),
+            mapbox=dict(
+                accesstoken=mapbox_access_token,
+                bearing=0,  # orientation
+                style=style,
+                # options available "basic", "streets", "outdoors", "light", "dark", "satellite", or "satellite-streets" need access token
+                # "open-street-map", "carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner" or "stamen-watercolor" no token
+                center=dict(
+                    lat=42.44208797622657,
+                    lon=12.966702481337714
+                ),
+
+                pitch=0,  # incidence angle
+                zoom=5
+            ),
+            paper_bgcolor=app_settings['background_color'],
+
+        )
+    }
+    return new_map
 
 
 ############
@@ -112,7 +167,6 @@ card_icon = {
 blackbold = {'color': 'black', 'font-weight': 'bold'}
 
 
-#############test with multiple cards
 def return_card(title, text):
     card_content = [
         # dbc.CardHeader("Card header"),
@@ -139,12 +193,14 @@ def setCardIcon(className, color):
     )
     return icon
 
+
 def b64_image(image_filename):
     with open(image_filename, 'rb') as f:
         image = f.read()
     return 'data:images/png;base64,' + base64.b64encode(image).decode('utf-8')
 
-app_settings = {'background_color' : '#404040', 'div_text' :'#cccccc'}
+
+app_settings = {'background_color': '#404040', 'div_text': '#cccccc'}
 
 app.layout = html.Div([
     # ---------------------------------------------------------------
@@ -160,13 +216,16 @@ app.layout = html.Div([
     html.Div(children=[
         html.Br(),
         dbc.Row([
-            html.Img(src=b64_image("C:/Users/filip/PycharmProjects/UH_Thesis_Project/images/logo2.png"), style={"margin-right":"10vh"}),
+            html.Img(src=b64_image("C:/Users/filip/PycharmProjects/UH_Thesis_Project/images/logo2.png"),
+                     style={"margin-right": "10vh"}),
             html.H4("Argo", className="card-title",
-                    style={'font-size': 64, 'text-align': 'center', 'color': "black"}), #color app_settings['div_text']
-            html.Img(src=b64_image("C:/Users/filip/PycharmProjects/UH_Thesis_Project/images/logo2.png"), style={"margin-left":"10vh"}),
-        ], className="mb-4", style={"margin-left":"32%"}),
-        #html.Br()
-    ], style={'backgroundColor' : '#00b300'}),
+                    style={'font-size': 64, 'text-align': 'center', 'color': "black"}),
+            # color app_settings['div_text']
+            html.Img(src=b64_image("C:/Users/filip/PycharmProjects/UH_Thesis_Project/images/logo2.png"),
+                     style={"margin-left": "10vh"}),
+        ], className="mb-4", style={"margin-left": "32%"}),
+        # html.Br()
+    ], style={'backgroundColor': '#00b300'}),
     # html.H4("App Name", className="card-title",
     #         style={'font-size': 64, 'text-align': 'center', 'color': app_settings['div_text']}),
 
@@ -192,7 +251,7 @@ app.layout = html.Div([
                  setCardIcon('fa fa-meh', 'warning')], className="mt-4 shadow", ))
 
         ],
-            className="mb-4", style={"margin-left":"2vh", "margin-right":"2vh"}),
+            className="mb-4", style={"margin-left": "2vh", "margin-right": "2vh"}),
     ]),
 
     dbc.Row([  # card,
@@ -202,7 +261,7 @@ app.layout = html.Div([
              setCardIcon('fa fa-chart-line', 'primary')], className="mt-4 shadow", )),
         dbc.Col()
     ],
-        className="mb-4", style={"margin-left": "2vh", "margin-right": "2vh"}, justify="center",),
+        className="mb-4", style={"margin-left": "2vh", "margin-right": "2vh"}, justify="center", ),
 
     html.Br(),
 
@@ -215,8 +274,8 @@ app.layout = html.Div([
                       # style={'padding-bottom': '2px', 'padding-left': '2px', 'height': '100vh'
                       #        # , 'width':'180vh'
                       #        },
-                      #animate=True disable it to pop up automatically markers
-                      ) ),
+                      # animate=True disable it to pop up automatically markers
+                      )),
         dbc.Col(
             [html.Div('Cities impacted', style={'color': app_settings['div_text'], 'fontSize': 50}),
              html.Br(),
@@ -227,7 +286,8 @@ app.layout = html.Div([
                           {'name': 'Tweets per \n1000 inhabitants', 'id': 'tweets_norm'}],
                  # title='Cities impacted',
                  data=getData(),
-                 style_cell={'textAlign': 'left', 'font-family': 'sans-serif', 'border': '2px solid black', 'whiteSpace': 'pre-line'},
+                 style_cell={'textAlign': 'left', 'font-family': 'sans-serif', 'border': '2px solid black',
+                             'whiteSpace': 'pre-line'},
                  # style_cell_conditional=[
                  #        {
                  #            'if': {'column_id': 'city'},
@@ -235,11 +295,11 @@ app.layout = html.Div([
                  #        } for c in (['City', 'Tweets'])
                  #    ],
                  style_header={
-                     'backgroundColor': '#00b300', #262626
+                     'backgroundColor': '#00b300',  # 262626
                      'fontWeight': 'bold',
                      'color': 'white'
                  },
-                 #style_data = {'backgroundColor': '#99e600'},
+                 # style_data = {'backgroundColor': '#99e600'},
                  # style_data_conditional=[
                  #     {
                  #         'if': {'row_index': 'odd'},
@@ -254,20 +314,72 @@ app.layout = html.Div([
 
         ),
 
-    ], style={'background-color': 'dark-gray', "margin-left":"2vh", "margin-right":"2vh"}),
+    ], style={'background-color': 'dark-gray', "margin-left": "2vh", "margin-right": "2vh"}
+    ),
+
+    # test button
+    dbc.Row(children=[
+        # dbc.Col(),
+        dbc.Col([
+            html.Div('Set background map',
+                     style={'color': app_settings['div_text'], 'fontSize': 30, 'margin-left': '14vh'}),
+            # 'text-align':'center'
+            html.Br(),
+            dcc.RadioItems(id='background-button',
+                           options=[{'label': 'Outdoors', 'value': 'outdoors'},
+                                    {'label': 'Dark', 'value': 'dark'},
+                                    {'label': 'Satellite', 'value': 'satellite'},
+                                    {'label': 'Streets', 'value': 'streets'},
+                                    {'label': 'Light', 'value': 'light'},
+                                    {'label': 'Basic', 'value': 'basic'}
+                                    ],
+                           value='outdoors',
+                           inputStyle={'color': app_settings['div_text'], 'margin-left': '14vh',
+                                       'text': 'Set background map'},
+                           labelStyle={'display': 'inline-block', 'color': app_settings['div_text'],
+                                       'top-margin': '25px', "width": "50%"}
+                           )
+
+        ]),
+        dbc.Col([
+            html.Div('Set map marker color',
+                     style={'color': app_settings['div_text'], 'fontSize': 30, 'margin-left': '5vh'}),
+            # 'text-align':'center'
+            html.Br(),
+            dcc.RadioItems(id='marker-button',
+                           options=[{'label': 'Yellow', 'value': 'yellow'},
+                                    {'label': 'Red', 'value': 'red'},
+                                    {'label': 'Blue', 'value': 'blue'},
+                                    {'label': 'Orange', 'value': 'orange'},
+                                    {'label': 'Green', 'value': 'green'},
+                                    {'label': 'White', 'value': 'white'}
+                                    ],
+                           value='green',
+                           inputStyle={'color': app_settings['div_text'], 'margin-left': '5vh',
+                                       'text': 'Set background map'},
+                           labelStyle={'display': 'inline-block', 'color': app_settings['div_text'],
+                                       'top-margin': '25px', "width": "50%"}
+                           )
+        ])
+    ]),
+    html.Br(),
+    html.Br(),
+    # end test
 
     dbc.Row(children=[
         dbc.Col(
-            [html.Div('Number of tweets detected', style={'color': app_settings['div_text'], 'fontSize': 50, 'text-align': 'center'}),
+            [html.Div('Number of tweets detected',
+                      style={'color': app_settings['div_text'], 'fontSize': 50, 'text-align': 'center'}),
              dcc.Graph(id='line-chart',
                        style={'display': 'inline-block', 'height': '60vh', 'width': '100vh'},
                        animate=True
                        )],  # TEST WITH ANOTHER CHART
         ),
         dbc.Col(
-            [html.Div("Users' feelings", style={'color': app_settings['div_text'], 'fontSize': 50, 'text-align': 'center'}),
+            [html.Div("Users' feelings",
+                      style={'color': app_settings['div_text'], 'fontSize': 50, 'text-align': 'center'}),
              dcc.Graph(id='pie-chart')])
-    ], style={"margin-left":"2vh", "margin-right":"2vh"}),
+    ], style={"margin-left": "2vh", "margin-right": "2vh"}),
 
     html.Br(),
     html.Br()
@@ -275,65 +387,6 @@ app.layout = html.Div([
     className='ten columns offset-by-one',  # you have a total of 12 columns
     style={'backgroundColor': app_settings['background_color']}
 )
-
-
-# ---------------------------------------------------------------
-# Output of Graph
-@app.callback(Output('map', 'figure'),
-              [Input('interval-component', 'n_intervals')]
-              )
-def update_map(n):
-    # df_sub = df[(df['tweets'].isin(chosen_boro))]
-    #df_sub = df
-    df_sub = pd.read_csv("Stream_Data/CitiesFound.csv")
-
-    logger.info(' Updating map..')
-
-    for idx, row in df_sub.iterrows():
-        df_sub.at[idx, 'details'] =  'City: {0} <br>Tweets per 1000 inhabitants: {1} <br>Magnitude: {2}'.format(row['city'], row['tweets_norm'], row['magnitudo'])
-    # Create figure
-    locations = [go.Scattermapbox(
-        lon=df_sub['lon'],
-        lat=df_sub['lat'],
-        mode='markers',
-        # marker={'color': df_sub['city'], 'size': 10}, gives error
-        #marker={'color': df_sub['tweets'], 'size': 10},
-        marker={'color': 'green', 'size':10},
-        # unselected={'marker' : {'opacity':0, 'color' : 'black'}},
-        # selected={'marker': {'size': 5}},
-        hoverinfo='text',
-        hovertext=df_sub['details'],
-        customdata=df_sub['city'],
-
-    )]
-
-    # Return figure
-    return {
-        'data': locations,
-        'layout': go.Layout(
-            uirevision='foo',  # preserves state of figure/map after callback activated
-            #clickmode='event+select',
-            hovermode='closest',
-            hoverdistance=3,
-            title=dict(text="Where is the earthquake?", font=dict(size=50, color='#cccccc')),
-            mapbox=dict(
-                accesstoken=mapbox_access_token,
-                bearing=0,  # orientation
-                style='outdoors', # options available "basic", "streets", "outdoors", "light", "dark", "satellite", or "satellite-streets" need access token
-                                           # "open-street-map", "carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner" or "stamen-watercolor" no token
-                center=dict(
-                    lat=42.44208797622657,
-                    lon=12.966702481337714
-                ),
-
-                pitch=0,  # incidence angle
-                zoom=5
-            ),
-            paper_bgcolor=app_settings['background_color'],
-
-        )
-    }
-
 
 # -----------------------------------------------------------------
 # test with line chart
@@ -350,12 +403,12 @@ def update_line(n2):
         streamed = pd.read_csv('Stream_Data/Earthquakes_Detection.csv', sep=',')
     except:
         streamed = pd.DataFrame(columns=['X', 'Y'])
-    if len(streamed) > 0 :
+    if len(streamed) > 0:
         new_streamed = streamed[time:]
         # print(new_streamed)
         ###### end testing
-        #dff.loc[len(dff)] = [time, rd.randint(1, 101)]
-        #dff = dff.append(new_streamed, ignore_index=True)
+        # dff.loc[len(dff)] = [time, rd.randint(1, 101)]
+        # dff = dff.append(new_streamed, ignore_index=True)
         for index, row in new_streamed.iterrows():
             if index >= time:
                 dff.loc[index] = [row['X'], row['Y']]
@@ -375,11 +428,11 @@ def update_line(n2):
 
     return {'data': [trace],
             'layout': go.Layout(
-                xaxis=dict(range=[dff['X'].min(), dff['X'].max()], title='Time', color='white'), #gridcolor='white'
-                yaxis=dict(range=[dff['Y'].min(), dff['Y'].max()], title='Count', color='white'), # gridcolor='white'
-                colorway=['#cc8500'], #set line color
-                paper_bgcolor= app_settings['background_color'],
-                plot_bgcolor= app_settings['background_color'],
+                xaxis=dict(range=[dff['X'].min(), dff['X'].max()], title='Time', color='white'),  # gridcolor='white'
+                yaxis=dict(range=[dff['Y'].min(), dff['Y'].max()], title='Count', color='white'),  # gridcolor='white'
+                colorway=['#cc8500'],  # set line color
+                paper_bgcolor=app_settings['background_color'],
+                plot_bgcolor=app_settings['background_color'],
 
             )
 
@@ -397,6 +450,7 @@ def update_table(n):
     logger.info(' Updating cities table..')
     return getData()
 
+
 # --------------------------------------------------------------
 # update card
 @app.callback(Output('card-counter', 'children'),
@@ -411,6 +465,7 @@ def update_card(n):
     newCard = return_card("Total N° of tweets detected", str(maxVal))
     return newCard
 
+
 # --------------------------------------------------------------
 
 # update card
@@ -423,17 +478,18 @@ def update_severity(n):
     logger.info(' Updating card of severity code..')
     #     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
     severity = pd.read_csv('Stream_Data/Severity.csv', sep=',')
-    if len(severity) < 50 :
+    if len(severity) < 50:
         newCard = return_card('Severity code', 'Unknown')
     else:
         new_val = severity['severity'].mean()
-        if new_val < -0.8 :
+        if new_val < -0.8:
             newCard = return_card('Severity code', 'Red')
-        elif (new_val >= -0.8) and (new_val < -0.50) :
+        elif (new_val >= -0.8) and (new_val < -0.50):
             newCard = return_card('Severity code', 'Orange')
-        elif new_val >= -0.5 :
+        elif new_val >= -0.5:
             newCard = return_card('Severity code', 'Yellow')
     return newCard
+
 
 # --------------------------------------------------------------
 # update city counter
@@ -444,7 +500,7 @@ def update_severity(n):
               )
 def update_city(n):
     #     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
-    df_city = df.sort_values(by='tweets', ascending=False)
+    df_city = df.sort_values(by='tweets_norm', ascending=False)
     logger.info(' Updating card of most impacted city..')
     newCard = return_card("City mostly involved", df_city['city'].iloc[0])
     return newCard
@@ -485,6 +541,25 @@ def update_city(n):
     newCard = return_card("Last burst detected", burst)
     return newCard
 
+
+# --------------------------------------------------------------
+# update button
+@app.callback(Output('map', 'figure'), [Input('background-button', 'value'),
+                                        Input('marker-button', 'value'),
+                                        Input('interval-component', 'n_intervals')])
+def change_button_style(value, color, n):
+    markers_list = ["red", "yellow", "blue", "green", "white", "orange"]
+    for elem in markers_list:
+        if color == elem:
+            color_choice = elem
+    locations = create_locations(color_choice)
+
+    backgrounds = ["dark", "satellite", "basic", "streets", "outdoors", "light"]
+    for elem in backgrounds:
+        if value == elem:
+            choice = elem
+    map = return_map(locations, choice)
+    return map
 
 
 # --------------------------------------------------------------
@@ -529,23 +604,19 @@ def update_pie(n):
     )
 
     pie_chart.update_layout({
-                            "plot_bgcolor": "rgba(0, 0, 0, 0)",
-                            "paper_bgcolor": "rgba(0, 0, 0, 0)",
-                            "font": {"color":"white"}, #legend
+        "plot_bgcolor": "rgba(0, 0, 0, 0)",
+        "paper_bgcolor": "rgba(0, 0, 0, 0)",
+        "font": {"color": "white"},  # legend
 
-                            })
+    })
     logger.info('-----------------------------------------------------------------------------------------------')
     logger.info('-----------------------------------------------------------------------------------------------')
 
     return pie_chart
 
 
-
-
-
 if __name__ == '__main__':
     app.run_server(debug=False, dev_tools_hot_reload=True)
-
 
 # modal popup
 # https://community.plotly.com/t/any-way-to-create-an-instructions-popout/18828/2

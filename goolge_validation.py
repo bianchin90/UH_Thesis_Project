@@ -57,6 +57,55 @@ def find_burst():
         burst = 'No bursts detected so far'
     return burst
 
+def update_map(n):
+
+    df_sub = pd.read_csv("Stream_Data/CitiesFound.csv")
+    logger.info(' Updating map..')
+
+    for idx, row in df_sub.iterrows():
+        df_sub.at[idx, 'details'] =  'City: {0} <br>Tweets per 1000 inhabitants: {1} <br>Magnitude: {2}'.format(row['city'], row['tweets_norm'], row['magnitudo'])
+    # Create figure
+    locations = [go.Scattermapbox(
+        lon=df_sub['lon'],
+        lat=df_sub['lat'],
+        mode='markers',
+        # marker={'color': df_sub['city'], 'size': 10}, gives error
+        #marker={'color': df_sub['tweets'], 'size': 10},
+        marker={'color': 'green', 'size':10},
+        # unselected={'marker' : {'opacity':0, 'color' : 'black'}},
+        # selected={'marker': {'size': 5}},
+        hoverinfo='text',
+        hovertext=df_sub['details'],
+        customdata=df_sub['city'],
+    )]
+    # Return figure
+    return {
+        'data': locations,
+        'layout': go.Layout(
+            uirevision='foo',  # preserves state of figure/map after callback activated
+            #clickmode='event+select',
+            hovermode='closest',
+            hoverdistance=3,
+            title=dict(text="Where is the earthquake?", font=dict(size=50, color='#cccccc')),
+            mapbox=dict(
+                accesstoken=mapbox_access_token,
+                bearing=0,  # orientation
+                style='outdoors', # options available "basic", "streets", "outdoors", "light", "dark", "satellite", or "satellite-streets" need access token
+                                           # "open-street-map", "carto-positron", "carto-darkmatter", "stamen-terrain", "stamen-toner" or "stamen-watercolor" no token
+                center=dict(
+                    lat=42.44208797622657,
+                    lon=12.966702481337714
+                ),
+
+                pitch=0,  # incidence angle
+                zoom=5
+            ),
+            paper_bgcolor=app_settings['background_color'],
+
+        )
+    }
+
+
 if __name__ == '__main__':
 
     #print(burst)
