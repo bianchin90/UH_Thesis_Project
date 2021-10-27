@@ -291,7 +291,7 @@ def process_data() :
         logger.info('-----------------------------------------------------------------------------------------------')
 
 
-        # save sentiment anaysis results
+        # save sentiment anaysis results to csv
         tm.append(start)
         if len(detected) > 0:
             words.append(sentiment_eval['sentiment_value'].sum())
