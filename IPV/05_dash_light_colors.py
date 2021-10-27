@@ -71,21 +71,20 @@ def getData():
     # print(data)
     return data
 
-
-def find_burst():
+#function to retrieve last tweets' burst based on a threshold value
+def find_burst(threshold):
+    logger.info(' Looking for new bursts..')
+    limit = threshold
     streamed = pd.read_csv('Stream_Data/Earthquakes_Detection.csv', sep=',')
-    # temp = pd.DataFrame(columns=['Z'], data=streamed['Y'])
     streamed = streamed.sort_values(by=['X'])
     temp = streamed['Y'].astype(int)
-    # temp +=1
-    # streamed['old'] = temp
     temp = temp.pct_change()
     streamed['shift'] = temp
     streamed['shift'] = streamed['shift'].fillna(0)
     for idx, row in streamed.iterrows():
         if row['shift'] == np.inf:
             streamed.at[idx, 'shift'] = row['Y']
-    streamed = streamed[streamed['shift'] >= 0.05]
+    streamed = streamed[streamed['shift'] >= limit]
     if len(streamed) > 0:
         sel = streamed.tail(1)
         burst = sel['X'].iloc[-1]
@@ -94,7 +93,7 @@ def find_burst():
         burst = 'No bursts detected so far'
     return burst
 
-
+#function to create data for the map. takes in input the symobology color
 def create_locations(marker_color):
     df_sub = pd.read_csv("Stream_Data/CitiesFound.csv")
     logger.info(' Updating map..')
@@ -119,7 +118,7 @@ def create_locations(marker_color):
     )]
     return locations
 
-
+#funtion to create the map, takes in input data and map style
 def return_map(localities, style):
     new_map = {
         'data': localities,
@@ -150,7 +149,7 @@ def return_map(localities, style):
     return new_map
 
 
-############
+# define external stylesheets for css
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 FONT_AWESOME = "https://use.fontawesome.com/releases/v5.10.2/css/all.css"
 # bootsrap themes https://bootswatch.com/default/
@@ -537,7 +536,7 @@ def update_sentiment(n):
               )
 def update_city(n):
     #     # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
-    burst = find_burst()
+    burst = find_burst(threshold=0.05)
     newCard = return_card("Last burst detected", burst)
     return newCard
 

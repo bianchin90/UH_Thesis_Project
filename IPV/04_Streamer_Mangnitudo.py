@@ -99,6 +99,10 @@ def process_data() :
     # declare dataframe for emotions perceived by population
     feelings = pd.DataFrame(columns=['feelings'])
 
+    # define other two arrays to keep track of the number of sentiment words detected
+    tm = []
+    words = []
+
     # only for test
     counter = 0
     while start < last:
@@ -191,7 +195,6 @@ def process_data() :
         matching = matching.drop_duplicates()
         detected = papers.merge(matching, on='content')
         #print(detected.to_string())
-        #################END TEST #questo pezzo qui non serve a nulla perchè annulla il lavoro dell'LDA. prova ad inserirlo nel geoprocesing cercando solo sisma/magnitudo/scossa
 
         if len(detected) > 0:
             #print(detected.to_string())
@@ -199,6 +202,7 @@ def process_data() :
             # run sentiment analysis
             logger.info(' Starting sentiment analysis..')
             sentiment_eval = recycle.perform_sentiment_analysis(sentiment_dataset=sentiment, tweet_dataset=detected)
+
 
             logger.info(' Computing emotions analysis..')
             emotion_content = sentiment_eval['content']
@@ -210,6 +214,7 @@ def process_data() :
                 severity = pd.DataFrame(columns=['severity'], data=tot_emo)
                 #severity.at[0, 'severity'] = sum(tot_emo)/len(tot_emo)
                 severity.to_csv('Stream_Data/Severity.csv', index=False)
+
 
                 #scaled values
             #input('press any key to continue:')
@@ -284,6 +289,18 @@ def process_data() :
             color_code = 'Yellow'
         logger.info(' Severity of tweets in this time window: {0}'.format(color_code))
         logger.info('-----------------------------------------------------------------------------------------------')
+
+
+        # save sentiment anaysis results
+        tm.append(start)
+        if len(detected) > 0:
+            words.append(sentiment_eval['sentiment_value'].sum())
+        else:
+            words.append(0)
+        severity_detection = pd.DataFrame()
+        severity_detection['Time'] = tm
+        severity_detection['Word_Count'] = words
+        severity_detection.to_csv('Stream_Data/Severity_Detection.csv', index=False)
 
 
         # set next time window
