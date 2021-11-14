@@ -29,15 +29,18 @@ pd.set_option('display.max_columns',10)
 
 
 #define a list of topics
-topics = ['#EURO2020', '#G20', '#vaccini', '#ddlzan', '#ferragni', '#sanremo', '#maneskin']
+#topics = ['#EURO2020', '#G20', '#vaccini', '#ddlzan', '#ferragni', '#sanremo', '#maneskin']
+topics = ['#clima', '#sicilia', '#enricoletta']
 
 
 for topic in topics:
     logger.info(' scraping topic {0}'.format(topic))
     #search = '"terremoto" "magnitudo" since:2016-08-24  until:2016-08-26 lang:it -filter:replies -filter:retweets'
-    search = '"{0}" since:2021-02-22  until:2021-07-01 lang:it -filter:replies -filter:retweets'.format(topic)
+    # search = '"{0}" since:2021-02-22  until:2021-07-01 lang:it -filter:replies -filter:retweets'.format(topic)
+    search = '"{0}" since:2019-01-30  until:2019-02-01 lang:it -filter:replies -filter:retweets'.format(topic)
     #terremoto +lang:it +
-    max_num = 200000
+    # max_num = 200000
+    max_num = 200
     scraped_tweets = sntwitter.TwitterSearchScraper(search).get_items()
 
     # slicing the generator 1234

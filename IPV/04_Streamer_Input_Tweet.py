@@ -73,27 +73,27 @@ def process_data() :
     # raw = pd.read_excel('C:/Users/filip/PycharmProjects/UH_Thesis_Project/historical_data/historical_tweets_Test_Amatrice2.xlsx') # dataset for real simulations
     #raw = pd.read_excel('C:/Users/filip/PycharmProjects/UH_Thesis_Project/historical_data/historical_tweets_2019-01-01_2019-02-01.xlsx')
     # raw = pd.read_excel(r'C:\Users\filip\PycharmProjects\UH_Thesis_Project\IPV\Stream_Data\Precision_Recall_Fscore\Precision_Test.xlsx') #dataset to compute precision and recall
-    raw = pd.read_excel(r'C:\Users\filip\PycharmProjects\UH_Thesis_Project\IPV\historical_data_IPR\historical_tweets_Jan_2017.xlsx')  # dataset for severity test on orange code
+    #raw = pd.read_excel(r'C:\Users\filip\PycharmProjects\UH_Thesis_Project\IPV\historical_data_IPR\historical_tweets_Jan_2017.xlsx')  # dataset for severity test on orange code
 
-    for ix, ln in raw.iterrows():
-        nowContent = recycle.remove_url(ln['content'])
-        raw.at[ix, 'content'] = nowContent
-    len_df = len(raw)
-
-    # sort by date
-    raw = raw.sort_values(by=['date'])
+    # for ix, ln in raw.iterrows():
+    #     nowContent = recycle.remove_url(ln['content'])
+    #     raw.at[ix, 'content'] = nowContent
+    # len_df = len(raw)
+    #
+    # # sort by date
+    # raw = raw.sort_values(by=['date'])
 
     # process in batches of 5 minutes
     # time_window = 30  # 12 hours: 720
-    time_window = input(' Please express in minutes the desired time window: ')
-    while not time_window.isnumeric():
-        time_window = input(' Time window must be a numeric value: ')
-    time_window = int(time_window)
-    raw['date'] = pd.to_datetime(raw['date'])
-    # print(papers[['date', 'content']])
-    last = raw.date.max()
-    start = raw.date.min()
-    next = start + dt.timedelta(minutes=time_window)
+    # time_window = input(' Please express in minutes the desired time window: ')
+    # while not time_window.isnumeric():
+    #     time_window = input(' Time window must be a numeric value: ')
+    # time_window = int(time_window)
+    # raw['date'] = pd.to_datetime(raw['date'])
+    # # print(papers[['date', 'content']])
+    # last = raw.date.max()
+    # start = raw.date.min()
+    # next = start + dt.timedelta(minutes=time_window)
     #print('{0}, {1}, {2}'.format(start, next, last))
 
     # define array x and y to plot
@@ -109,10 +109,12 @@ def process_data() :
 
     # only for test
     counter = 0
-    while start < last:
-        logger.info(' timeframe selected: from {0} to {1}'.format(start, next))
-        df = raw[(raw['date'] >= start) & (raw['date'] < next)]
-
+    tweet = input(" Please post a tweet. If you wish to stop the program type 'exit'.")
+    while tweet.lower() != 'exit':
+        #logger.info(' timeframe selected: from {0} to {1}'.format(start, next))
+        # df = raw[(raw['date'] >= start) & (raw['date'] < next)]
+        input_data = [tweet]
+        df = pd.DataFrame(columns=['content'], data = input_data)
         # keep unnecessary columns
         papers = df[['content']]
         papers['content'] = papers['content'].replace(',', ' ').replace('  ', ' ')
@@ -217,7 +219,7 @@ def process_data() :
                 tot_emo.append(r['sentiment_value'])
                 severity = pd.DataFrame(columns=['severity'], data=tot_emo)
                 #severity.at[0, 'severity'] = sum(tot_emo)/len(tot_emo)
-                severity.to_csv('Stream_Data/Severity.csv', index=False)
+                ##################severity.to_csv('Stream_Data/Severity.csv', index=False)
 
 
                 #scaled values
@@ -261,7 +263,7 @@ def process_data() :
 
 
                 #end normalization
-                geo_df.to_csv('Stream_Data/CitiesFound.csv', index=False)
+                ##################geo_df.to_csv('Stream_Data/CitiesFound.csv', index=False)
 
         else:
             detected = pd.DataFrame()
@@ -269,15 +271,16 @@ def process_data() :
             sentiment_eval = pd.DataFrame()
             emo = []
 
-        x.append(start)
-        y.append(len(detected))
+        # x.append(start)
+        # y.append(len(detected))
 
         #zero or one tweets detected. it is likely to be something happened in the past
 
 
         #return statistics for this iteration
         logger.info('-----------------------------------------------------------------------------------------------')
-        logger.info(' Overall statistics for range {0} - {1}'.format(start, next))
+        # logger.info(' Overall statistics for range {0} - {1}'.format(start, next))
+        logger.info(' Overall statistics for the input tweet')
         logger.info(' Earthquake tweets found : {0}'.format(len(detected)))
         if len(geoProc) > 0:
 #            logger.info('')
@@ -306,7 +309,7 @@ def process_data() :
 
 
         # save sentiment anaysis results to csv
-        tm.append(start)
+        # tm.append(start)
         if len(detected) > 0:
             words.append(sentiment_eval['sentiment_value'].sum())
             #words.append(sentiment_eval['sentiment_value'].mean())
@@ -315,23 +318,25 @@ def process_data() :
         severity_detection = pd.DataFrame()
         severity_detection['Time'] = tm
         severity_detection['Word_Count'] = words
-        severity_detection.to_csv('Stream_Data/Severity_Detection.csv', index=False)
+        ##################severity_detection.to_csv('Stream_Data/Severity_Detection.csv', index=False)
 
 
         # set next time window
-        start = next
-        next = next + dt.timedelta(minutes=time_window)
+        # start = next
+        # next = next + dt.timedelta(minutes=time_window)
         counter += 1
         to_save = pd.DataFrame()
         to_save['X'] = x
         to_save['Y'] = y
-        to_save.to_csv('Stream_Data/Earthquakes_Detection.csv', index=False)
+        ##################to_save.to_csv('Stream_Data/Earthquakes_Detection.csv', index=False)
 
         # pie chart (working)
         tt = pd.value_counts(feelings['feelings'])
         my_labels = feelings.feelings.unique()
         my_explode = (0, 0.1, 0, 0.1)
-        feelings.to_csv('Stream_Data/SentimentResults.csv', index=False)
+        ##################feelings.to_csv('Stream_Data/SentimentResults.csv', index=False)
+        time.sleep(1)
+        tweet = input(" Please post another tweet. If you wish to stop the program type 'exit'.")
 
         # input('press any key to continue')
         #time.sleep(2)

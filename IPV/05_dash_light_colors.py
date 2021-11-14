@@ -222,7 +222,7 @@ app.layout = html.Div([
             # color app_settings['div_text']
             html.Img(src=b64_image("C:/Users/filip/PycharmProjects/UH_Thesis_Project/images/logo2.png"),
                      style={"margin-left": "10vh"}),
-        ], className="mb-4", style={"margin-left": "32%"}),
+        ], className="mb-4", style={"margin-left": "35%"}),
         # html.Br()
     ], style={'backgroundColor': '#00b300'}),
     # html.H4("App Name", className="card-title",
@@ -242,7 +242,7 @@ app.layout = html.Div([
                  setCardIcon('fa fa-exclamation-triangle', 'danger')], className="mt-4 shadow", )),
 
             dbc.Col(dbc.CardGroup(
-                [dbc.Card(return_card('City mostly involved', 'Cartago'), inverse=True, id='city-counter'),
+                [dbc.Card(return_card('City mostly involved', 'No results so far'), inverse=True, id='city-counter'),
                  setCardIcon('fa fa-map-marker-alt', 'success')], className="mt-4 shadow", )),
 
             dbc.Col(dbc.CardGroup(
