@@ -211,8 +211,8 @@ if __name__ == '__main__':
     # load the pre-prepared pyLDAvis data from disk
     with open(LDAvis_data_filepath, 'rb') as f:
         LDAvis_prepared = pickle.load(f)
-    pyLDAvis.save_html(LDAvis_prepared, 'ldavis_prepared_final.html')
+    pyLDAvis.save_html(LDAvis_prepared, 'ldavis_prepared_final_First_Version.html')
 
     #save model
-    # lda_model.save('final_model.model')
+    lda_model.save('final_model_20112021.model')
     logger.info(' process completed')

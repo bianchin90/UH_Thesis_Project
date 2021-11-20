@@ -27,20 +27,12 @@ logger.info(' modules imported correctly')
 logging.getLogger('gensim').setLevel(logging.ERROR)
 logging.getLogger('pandas').setLevel(logging.ERROR)
 
-#############CODE FROM STREAMER
 pd.set_option('display.max_columns', None)
 pd.options.mode.chained_assignment = None  # default='warn'
-
-
-# def Sort(sub_li):
-#     sub_li.sort(key=lambda x: x[1])
-#     sub_li.reverse()
-#     return sub_li
 
 def most_frequent(List):
     return max(set(List), key = List.count)
 
-# if __name__ == '__main__':
 def process_data() :
     tot_emo = []
     # define dataframe containing istat cities
@@ -69,32 +61,6 @@ def process_data() :
 
     # Read data into papers
     logger.info(' Reading DF..')
-
-    # raw = pd.read_excel('C:/Users/filip/PycharmProjects/UH_Thesis_Project/historical_data/historical_tweets_Test_Amatrice2.xlsx') # dataset for real simulations
-    #raw = pd.read_excel('C:/Users/filip/PycharmProjects/UH_Thesis_Project/historical_data/historical_tweets_2019-01-01_2019-02-01.xlsx')
-    # raw = pd.read_excel(r'C:\Users\filip\PycharmProjects\UH_Thesis_Project\IPV\Stream_Data\Precision_Recall_Fscore\Precision_Test.xlsx') #dataset to compute precision and recall
-    #raw = pd.read_excel(r'C:\Users\filip\PycharmProjects\UH_Thesis_Project\IPV\historical_data_IPR\historical_tweets_Jan_2017.xlsx')  # dataset for severity test on orange code
-
-    # for ix, ln in raw.iterrows():
-    #     nowContent = recycle.remove_url(ln['content'])
-    #     raw.at[ix, 'content'] = nowContent
-    # len_df = len(raw)
-    #
-    # # sort by date
-    # raw = raw.sort_values(by=['date'])
-
-    # process in batches of 5 minutes
-    # time_window = 30  # 12 hours: 720
-    # time_window = input(' Please express in minutes the desired time window: ')
-    # while not time_window.isnumeric():
-    #     time_window = input(' Time window must be a numeric value: ')
-    # time_window = int(time_window)
-    # raw['date'] = pd.to_datetime(raw['date'])
-    # # print(papers[['date', 'content']])
-    # last = raw.date.max()
-    # start = raw.date.min()
-    # next = start + dt.timedelta(minutes=time_window)
-    #print('{0}, {1}, {2}'.format(start, next, last))
 
     # define array x and y to plot
     x = []  # here you add the count of earthquakes detected
@@ -179,7 +145,8 @@ def process_data() :
         for body in corpus:
             vector = lda[body]
             new_v = sorted(vector[0], key=lambda x: x[1], reverse=True)
-            if new_v[0][0] == 3:
+            print(new_v)
+            if (new_v[0][0] == 3) or(new_v[1][0] == 3):
                 forecast.append('Earthquake')
             else:
                 forecast.append('Other')
@@ -187,24 +154,44 @@ def process_data() :
         # select only tweets marked as earthquake
         papers['forecast'] = forecast
 
+        newly_detected = papers[papers['forecast'] == 'Earthquake']
+        if len(newly_detected) > 0:
+            detected = newly_detected
+        else:
+            detected = pd.DataFrame()
 
-        #################START TEST
+        not_detected = papers[papers['forecast'] != 'Earthquake']
+#####################TEST
         original = pd.read_csv('C:/Users/filip/PycharmProjects/UH_Thesis_Project/Georeferencing/earthquake_synonyms.csv', sep=',')
 
         synonyms = original.term.tolist()
         matching = pd.DataFrame(columns=['content'])
 
         for elem in synonyms:
-            sel = papers[papers['content'].str.contains(elem, case=False, na=False)]
+            sel = not_detected[not_detected['content'].str.contains(elem, case=False, na=False)]
             sel = sel[['content']]
             matching = matching.append(sel)
         matching = matching.drop_duplicates()
-        detected = papers.merge(matching, on='content')
-        #print(detected.to_string())
+        detected2 = papers.merge(matching, on='content')
+        if len(detected) > 0:
+            detected = detected.append(detected2)
+        else:
+            detected = detected2
+
+        # original = pd.read_csv('C:/Users/filip/PycharmProjects/UH_Thesis_Project/Georeferencing/earthquake_synonyms.csv', sep=',')
+        #
+        # synonyms = original.term.tolist()
+        # matching = pd.DataFrame(columns=['content'])
+        #
+        # for elem in synonyms:
+        #     sel = papers[papers['content'].str.contains(elem, case=False, na=False)]
+        #     sel = sel[['content']]
+        #     matching = matching.append(sel)
+        # matching = matching.drop_duplicates()
+        # detected = papers.merge(matching, on='content')
+#####################End test
 
         if len(detected) > 0:
-            #print(detected.to_string())
-            #print(b)
             # run sentiment analysis
             logger.info(' Starting sentiment analysis..')
             sentiment_eval = recycle.perform_sentiment_analysis(sentiment_dataset=sentiment, tweet_dataset=detected)

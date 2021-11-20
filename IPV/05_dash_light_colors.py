@@ -143,7 +143,6 @@ def return_map(localities, style):
                 zoom=5
             ),
             paper_bgcolor=app_settings['background_color'],
-
         )
     }
     return new_map
@@ -387,8 +386,9 @@ app.layout = html.Div([
     style={'backgroundColor': app_settings['background_color']}
 )
 
+#Start callbacks
 # -----------------------------------------------------------------
-# test with line chart
+# line chart
 dff = pd.DataFrame(columns=['X', 'Y'])
 
 
@@ -397,33 +397,24 @@ dff = pd.DataFrame(columns=['X', 'Y'])
 def update_line(n2):
     logger.info(' Updating line graph..')
     time = len(dff)
-    #######testing
     try:
         streamed = pd.read_csv('Stream_Data/Earthquakes_Detection.csv', sep=',')
     except:
         streamed = pd.DataFrame(columns=['X', 'Y'])
     if len(streamed) > 0:
         new_streamed = streamed[time:]
-        # print(new_streamed)
-        ###### end testing
-        # dff.loc[len(dff)] = [time, rd.randint(1, 101)]
-        # dff = dff.append(new_streamed, ignore_index=True)
+
         for index, row in new_streamed.iterrows():
             if index >= time:
                 dff.loc[index] = [row['X'], row['Y']]
-    # print(dff)
+
     trace = plotly.graph_objs.Scatter(
         x=list(dff['X']),
         y=list(dff['Y']),
         name='Scatter',
         mode='lines+markers'
 
-        # title='Number of tweets detected'
     )
-    # fig = px.line(dff, x=dff['X'], y=dff['Y'])
-    # fig = fig.update_layout(yaxis={'title':'Count'}, xaxis={'title':'Timeline'},
-    #                   title={'text':'Number of tweets detected',
-    #                   'font':{'size':28},'x':0.5,'xanchor':'center'})
 
     return {'data': [trace],
             'layout': go.Layout(
@@ -431,10 +422,8 @@ def update_line(n2):
                 yaxis=dict(range=[dff['Y'].min(), dff['Y'].max()], title='Count', color='white'),  # gridcolor='white'
                 colorway=['#cc8500'],  # set line color
                 paper_bgcolor=app_settings['background_color'],
-                plot_bgcolor=app_settings['background_color'],
-
-            )
-
+                plot_bgcolor=app_settings['background_color']
+                )
             }
 
 
@@ -567,12 +556,6 @@ def change_button_style(value, color, n):
               Input('interval-component', 'n_intervals')
               )
 def update_pie(n):
-    # link for update https://stackoverflow.com/questions/66550872/dash-plotly-update-cards-based-on-date-value
-    # emotions = pd.DataFrame({'Col1': ['fear', 'joy', 'anger', 'sadness'], 'Value': [100] * 4})
-    # emotions['random'] = np.around(np.random.dirichlet
-    #                                (np.ones(emotions.shape[0]), size=1)[0],
-    #                                decimals=1)
-    # emotions['percentage'] = (emotions['Value'] * emotions['random']).astype(int)
     logger.info(' Updating pie chart..')
     emotions = pd.read_csv("Stream_Data/SentimentResults.csv", sep=',')
     sent = emotions['feelings'].value_counts(normalize=True) * 100
