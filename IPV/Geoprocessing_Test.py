@@ -59,7 +59,10 @@ def find_city(cities_df, tweets):
                 try:
                     magnitudo = tweet.split(elem)[1].split(' ')[1]
                     if len(magnitudo) > 1:
-                        magnitudo = magnitudo[0] + '.' + magnitudo[1]
+                        if '.' in magnitudo:
+                            magnitudo = magnitudo
+                        else:
+                            magnitudo = magnitudo[0] + '.' + magnitudo[1]
                 except:
                     magnitudo = 'unknown'
         if not magnitudo.replace('.', '').isnumeric():

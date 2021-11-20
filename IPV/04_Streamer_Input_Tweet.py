@@ -142,10 +142,11 @@ def process_data() :
         # declare list containing predictions
         forecast = []
         logger.info(' Printing LDA predictions.. ')
+
         for body in corpus:
             vector = lda[body]
             new_v = sorted(vector[0], key=lambda x: x[1], reverse=True)
-            print(new_v)
+            #if earthquake topic is among the top two, flag it as eq.
             if (new_v[0][0] == 3) or(new_v[1][0] == 3):
                 forecast.append('Earthquake')
             else:
@@ -160,13 +161,14 @@ def process_data() :
         else:
             detected = pd.DataFrame()
 
+        # select tweets flagged as non-earthquake
         not_detected = papers[papers['forecast'] != 'Earthquake']
-#####################TEST
         original = pd.read_csv('C:/Users/filip/PycharmProjects/UH_Thesis_Project/Georeferencing/earthquake_synonyms.csv', sep=',')
 
         synonyms = original.term.tolist()
         matching = pd.DataFrame(columns=['content'])
 
+        #search synonyms of earthquake in the tweets
         for elem in synonyms:
             sel = not_detected[not_detected['content'].str.contains(elem, case=False, na=False)]
             sel = sel[['content']]
