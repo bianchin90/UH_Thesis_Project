@@ -110,15 +110,15 @@ def process_data() :
         # remove stop words
         data_words = recycle.remove_stopwords(data_words)
 
-        logger.info(' Building Bi- and Tri- grams..')
+        logger.info(' Building Bi-grams..')
         # Build the bigram and trigram models
         # The two important arguments to Phrases are min_count and threshold.
         # The higher the values of these param, the harder it is for words to be combined
         bigram = gensim.models.Phrases(data_words, min_count=5, threshold=100)  # higher threshold fewer phrases.
-        trigram = gensim.models.Phrases(bigram[data_words], threshold=100)
+        #trigram = gensim.models.Phrases(bigram[data_words], threshold=100)
         # Faster way to get a sentence clubbed as a trigram/bigram
         bigram_mod = gensim.models.phrases.Phraser(bigram)
-        trigram_mod = gensim.models.phrases.Phraser(trigram)
+        #trigram_mod = gensim.models.phrases.Phraser(trigram)
 
         logger.info(' Removing stopwords..')
         # Remove Stop Words

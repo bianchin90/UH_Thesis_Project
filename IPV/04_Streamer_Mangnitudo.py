@@ -70,10 +70,10 @@ def process_data() :
     # Read data into papers
     logger.info(' Reading DF..')
 
-    # raw = pd.read_excel('C:/Users/filip/PycharmProjects/UH_Thesis_Project/historical_data/historical_tweets_Test_Amatrice2.xlsx') # dataset for real simulations
-    #raw = pd.read_excel('C:/Users/filip/PycharmProjects/UH_Thesis_Project/historical_data/historical_tweets_2019-01-01_2019-02-01.xlsx')
+    #raw = pd.read_excel('C:/Users/filip/PycharmProjects/UH_Thesis_Project/historical_data/historical_tweets_Test_Amatrice2.xlsx') # dataset for real simulations
+    raw = pd.read_excel('C:/Users/filip/PycharmProjects/UH_Thesis_Project/historical_data/historical_tweets_2019-01-01_2019-02-01.xlsx')
     # raw = pd.read_excel(r'C:\Users\filip\PycharmProjects\UH_Thesis_Project\IPV\Stream_Data\Precision_Recall_Fscore\Precision_Test.xlsx') #dataset to compute precision and recall
-    raw = pd.read_excel(r'C:\Users\filip\PycharmProjects\UH_Thesis_Project\IPV\historical_data_IPR\historical_tweets_Jan_2017.xlsx')  # dataset for severity test on orange code
+    # raw = pd.read_excel(r'C:\Users\filip\PycharmProjects\UH_Thesis_Project\IPV\historical_data_IPR\historical_tweets_Jan_2017.xlsx')  # dataset for severity test on orange code
 
     for ix, ln in raw.iterrows():
         nowContent = recycle.remove_url(ln['content'])
